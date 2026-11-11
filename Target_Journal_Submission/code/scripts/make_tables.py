@@ -230,6 +230,19 @@ def main(root):
         h0 = g_[g_.score_shift == 0]; S["guard_sim"] = dict(max_fire_h0=float(h0.fire_rate.max()), median_fire_h0=float(h0.fire_rate.median()), share_cells_le_nominal=float((h0.fire_rate <= 0.01).mean()),
                                                            min_power_shift05_n500=float(g_[(g_.score_shift == 0.5) & (g_.n1_val >= 500) & (g_.m >= 2000)].fire_rate.min()))
 
+
+    # ---- review round 3: equivalence analysis (TOST by bootstrap) and sensitivity to cells with few expected positives ----
+    dd = (ws[REF] - ws["dta_em"]).to_numpy()
+    lo90, hi90 = boot_ci(dd, alpha=0.10)
+    S["equivalence_paft_vs_dta"] = dict(mean_diff=float(dd.mean()), ci90_lo=lo90, ci90_hi=hi90, margin=0.01, equivalent_at_margin=bool(lo90 > -0.01 and hi90 < 0.01),
+                                        max_abs_dataset_diff=float(np.abs(dd).max()), dataset_of_max=str(ws.index[int(np.argmax(np.abs(dd)))]))
+    lg2 = lg.assign(exp_pos=lg.pi_target * lg.m)
+    rows = []
+    for lab, sel in [("all cells", lg2.exp_pos > -1), ("expected positives >= 5", lg2.exp_pos >= 5), ("expected positives >= 20", lg2.exp_pos >= 20)]:
+        w_ = lg2[sel & (lg2.rho != 1)].groupby(["dataset", "method"])["value"].mean().unstack()
+        x = paired_table(w_, REF, ["static", "dta_em", "em_fixed"]); x.insert(0, "cells", lab); x.insert(1, "share_of_cells", float((sel & (lg2.rho != 1) & (lg2.method == "static")).sum() / ((lg2.rho != 1) & (lg2.method == "static")).sum())); rows.append(x)
+    save(pd.concat(rows), "tableS_sensitivity_expected_positives", T, index=False)
+
     # ---- efficiency ------------------------------------------------------------------------------------------------
     ep = os.path.join(R, "efficiency", "efficiency.csv")
     if os.path.exists(ep):

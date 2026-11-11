@@ -10,7 +10,7 @@ from src.methods import quantify as Q
 def main(cfg_path, root):
     cfg = yaml.safe_load(open(cfg_path))
     f = sorted(glob.glob(os.path.join(root, "scores", "controlled", f"*__{cfg['main_model']}__s0.npz")))
-    f = [x for x in f if "adult" in x][0]
+    f = ([x for x in f if "adult" in x] or f)[0]
     z = np.load(f); s_val, y_val, s_te = z["s_val"], z["y_val"], z["s_test"]
     meta = json.loads(str(z["meta"]))
     t0 = time.perf_counter(); tracemalloc.start()

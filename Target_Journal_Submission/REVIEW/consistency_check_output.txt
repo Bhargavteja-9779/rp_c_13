@@ -1,0 +1,41 @@
+PASS manuscript regenerates identically from result files
+PASS no unfilled placeholders
+PASS no hand-typed 3-decimal results in the Results template — 0 found
+PASS all referenced figures exist — 8 figures
+PASS tables numbered consecutively in order of appearance — [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+PASS figures numbered consecutively in order of appearance — [1, 2, 3, 4, 5, 6, 7, 8]
+PASS Table 1 is cited in the text
+PASS Table 2 is cited in the text
+PASS Table 3 is cited in the text
+PASS Table 4 is cited in the text
+PASS Table 5 is cited in the text
+PASS Table 6 is cited in the text
+PASS Table 7 is cited in the text
+PASS Table 8 is cited in the text
+PASS Table 9 is cited in the text
+PASS Table 10 is cited in the text
+PASS Table 11 is cited in the text
+PASS Table 12 is cited in the text
+PASS Table 13 is cited in the text
+PASS Fig. 1 is cited in the text
+PASS Fig. 2 is cited in the text
+PASS Fig. 3 is cited in the text
+PASS Fig. 4 is cited in the text
+PASS Fig. 5 is cited in the text
+PASS Fig. 6 is cited in the text
+PASS Fig. 7 is cited in the text
+PASS Fig. 8 is cited in the text
+PASS every reference is cited and every citation resolves — 60 references
+PASS DOCX has native equations, tables and figures — 114 equations, 13 tables, 8 figures
+PASS DOCX has continuous line numbering
+PASS abstract headline numbers equal statistics.json — +0.036
+PASS claim: PAFT vs Static-F Holm p < 0.001 for every base learner
+PASS claim: PAFT vs Static-F Holm p < 0.01 for F0.5, F2, MCC
+PASS claim: Bayes vs plug-in Holm p < 0.001, 18/18 wins
+PASS claim: significant loss vs Static-F on ACS and electricity (Holm p < 0.001)
+PASS claim: PAFT-Guard has the highest label-free mean F1 at every noise level
+PASS claim: PAFT-L (50 labels) beats Static-F on ACS, Holm p < 0.001
+PASS claim: PAFT-Bayes beats Static-F on all datasets
+PASS claim: equivalence with DTA-EM at margin 0.01 (90 % CI)
+PASS unit tests pass — 10 passed in 1.18s
+OVERALL: PASS

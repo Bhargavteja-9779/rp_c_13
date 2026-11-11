@@ -80,3 +80,49 @@ def test_paft_beats_static_under_shift_and_guard_detects_violation():
 def test_dta_topk():
     q = np.array([0.9, 0.8, 0.1, 0.05])
     assert dta_topk(q) == 2
+
+
+def test_label_assisted_and_retune():
+    from src.methods.rules import paft_labelled, retune_on_labels
+    rng = np.random.default_rng(5)
+    sv, yv = _data(20000, 0.05, rng)
+    dl = DecisionLayer(sv, yv, n_bag=2)
+    s, y = _data(3000, 0.4, rng)
+    t_lab, pi_lab = paft_labelled(dl, s[200:], int(y[:200].sum()), 200, "labels")
+    assert abs(pi_lab - 0.4) < 0.1                       # binomial posterior recovers the prevalence
+    t_g, _ = paft_labelled(dl, s[200:], int(y[:200].sum()), 200, "guarded")
+    assert t_lab < dl.t_static and t_g < dl.t_static     # higher prevalence -> lower raw-score threshold
+    assert retune_on_labels(s[:50], np.zeros(50, int), 0.123) == 0.123   # no positives -> fallback
+    t = retune_on_labels(s[:500], y[:500], 0.5)
+    assert abs(f1_score(y[:500], s[:500] >= t) - Batch(s[:500], y[:500]).oracle()) < 1e-12
+
+
+def test_split_has_no_cross_split_duplicates():
+    import pandas as pd
+    from src.data.splits import make_split
+    rng = np.random.default_rng(0)
+    X = pd.DataFrame(rng.integers(0, 3, size=(3000, 4)), columns=list("abcd"))      # many exact duplicates
+    y = rng.integers(0, 2, 3000)
+    tr, va, te, audit = make_split(X, y, 0)
+    assert audit["cross_split_dups"] == 0 and audit["n_dup_rows"] > 0
+    assert len(set(tr) & set(va)) == 0 and len(set(tr) & set(te)) == 0 and len(tr) + len(va) + len(te) == 3000
+
+
+def test_encoder_uses_training_statistics_only():
+    import pandas as pd
+    from src.preprocessing.encode import TabularEncoder
+    tr = pd.DataFrame({"x": [0.0, 1.0, 2.0, 3.0], "c": ["a", "a", "b", "b"]})
+    te = pd.DataFrame({"x": [100.0, np.nan], "c": ["zzz", "a"]})
+    enc = TabularEncoder().fit(tr)
+    L = enc.linear(te)
+    assert L[0, 0] == 10.0 and abs(L[1, 0]) < 1e-6      # clipped z-score with training mean/sd; NaN -> training median
+    assert enc.tree(te)[0, 1] == -1                      # unseen category
+
+
+def test_prior_correction_em_recovers_prior_on_calibrated_scores():
+    rng = np.random.default_rng(7)
+    from scipy.stats import norm
+    def post(z, pi): return pi * norm.pdf(z - 2) / (pi * norm.pdf(z - 2) + (1 - pi) * norm.pdf(z))
+    y = (rng.random(50000) < 0.3).astype(int); z = rng.normal(2.0 * y, 1.0)
+    pi_hat, q = Q.q_em(post(z, 0.1), 0.1)
+    assert abs(pi_hat - 0.3) < 0.02 and abs(q.mean() - 0.3) < 0.02

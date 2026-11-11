@@ -1,5 +1,5 @@
 ---
-title: "Supplementary Information: Prevalence-adaptive F-measure thresholding for imbalanced tabular classification"
+title: "Supplementary Information: Prevalence-adaptive F-measure thresholding for imbalanced tabular classification under label shift"
 ---
 
 # S1 Implementation details
@@ -569,6 +569,23 @@ title: "Supplementary Information: Prevalence-adaptive F-measure thresholding fo
 | SantanderCustomerSatisfaction | 42,395 | eligible by description but download failed repeatedly; not included |
 
 : **Table S17** OpenML datasets screened against the inclusion criteria (binary target, at least 10,000 instances, at least 400 minority instances, minority prevalence at most 30 %)
+
+
+# S18 Sensitivity to cells with few expected positives
+
+| cells | share_of_cells | baseline | n_units | mean_diff | ci95_lo | ci95_hi | wins | ties | losses | p_wilcoxon | rank_biserial | p_holm |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| all cells | 1.00 | static | 18 | +0.0355 | +0.0270 | +0.0453 | 18 | 0 | 0 | 0.00001 | 1.000 | 0.00002 |
+| all cells | 1.00 | dta_em | 18 | −0.0014 | −0.0067 | +0.0020 | 14 | 0 | 4 | 0.09874 | 0.450 | 0.09874 |
+| all cells | 1.00 | em_fixed | 18 | +0.0255 | +0.0178 | +0.0337 | 18 | 0 | 0 | 0.00001 | 1.000 | 0.00002 |
+| expected positives >= 5 | 0.93 | static | 18 | +0.0376 | +0.0302 | +0.0463 | 18 | 0 | 0 | 0.00001 | 1.000 | 0.00002 |
+| expected positives >= 5 | 0.93 | dta_em | 18 | +0.0012 | +0.0003 | +0.0022 | 15 | 0 | 3 | 0.00896 | 0.684 | 0.00896 |
+| expected positives >= 5 | 0.93 | em_fixed | 18 | +0.0230 | +0.0165 | +0.0294 | 18 | 0 | 0 | 0.00001 | 1.000 | 0.00002 |
+| expected positives >= 20 | 0.81 | static | 18 | +0.0401 | +0.0333 | +0.0482 | 18 | 0 | 0 | 0.00001 | 1.000 | 0.00002 |
+| expected positives >= 20 | 0.81 | dta_em | 18 | +0.0007 | +0.0001 | +0.0015 | 11 | 0 | 7 | 0.28373 | 0.298 | 0.28373 |
+| expected positives >= 20 | 0.81 | em_fixed | 18 | +0.0199 | +0.0139 | +0.0258 | 18 | 0 | 0 | 0.00001 | 1.000 | 0.00002 |
+
+: **Table S18** Paired tests of PAFT-Bayes restricted to benchmark cells whose expected number of positives (target prevalence times batch size) exceeds a minimum
 
 
 ![**Fig. S1** Latency of the decision rules as a function of batch size (one CPU thread)](../figures/fig9_efficiency.png){width=3.5in}

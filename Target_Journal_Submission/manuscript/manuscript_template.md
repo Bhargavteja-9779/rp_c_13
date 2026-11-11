@@ -1,5 +1,5 @@
 ---
-title: "Prevalence-adaptive F-measure thresholding for imbalanced tabular classification: a guarded decision layer and its limits under controlled and real distribution shift"
+title: "Prevalence-adaptive F-measure thresholding for imbalanced tabular classification under label shift: a guarded decision layer and its limits"
 ---
 
 **Abstract**
@@ -57,7 +57,7 @@ Under (1) the expected confusion matrix of threshold $t$ on the deployment distr
 
 $$F_\beta(t;\pi)=\frac{(1+\beta^2)\,\pi\,G_1(t)}{\beta^2\pi+\pi\,G_1(t)+(1-\pi)\,G_0(t)}. \qquad (2)$$
 
-The static, validation-tuned threshold is $t_0=\arg\max_t F_\beta(t;\pi_0)$, and the best threshold for the deployment distribution is $t^\star(\pi)=\arg\max_t F_\beta(t;\pi)$. The *regret* of the static rule is $F_\beta(t^\star(\pi);\pi)-F_\beta(t_0;\pi)\ge 0$. Figure ⟦F:mechanism⟧ illustrates (2) for one of the benchmark datasets.
+The static, validation-tuned threshold is $t_0=\arg\max_t F_\beta(t;\pi_0)$, and the best threshold for the deployment distribution is $t^\star(\pi)=\arg\max_t F_\beta(t;\pi)$. The *regret* of the static rule is $F_\beta(t^\star(\pi);\pi)-F_\beta(t_0;\pi)\ge 0$. Fig. ⟦F:mechanism⟧ illustrates (2) for one of the benchmark datasets.
 
 ## 3.3 Optimality condition under a shifted prior
 
@@ -81,7 +81,7 @@ For $\beta=1$ and $\pi=\pi_0$, (3) is the result of Lipton et al. [⟦c:lipton20
 
 # 4 Proposed method: PAFT
 
-PAFT has a development stage, executed once on the labelled validation split, and a deployment stage, executed on every unlabelled batch (Figure ⟦F:workflow⟧). It never modifies or retrains the scorer.
+PAFT has a development stage, executed once on the labelled validation split, and a deployment stage, executed on every unlabelled batch (Fig. ⟦F:workflow⟧). It never modifies or retrains the scorer.
 
 ## 4.1 Development stage
 
@@ -168,11 +168,13 @@ The primary metric is F1 on each batch; F~0.5~, F~2~ and the Matthews correlatio
 
 ## 6.1 Static thresholds lose F1 under prevalence shift, and adaptive rules recover most of it (RQ1)
 
-Table ⟦T:main⟧ and Figure ⟦F:main⟧ give the main result for LightGBM. Averaged over the six shifted levels, Static-F reaches a mean F1 of ⟦f_static⟧, against ⟦f_oraclepi⟧ for Oracle-π and ⟦f_oraclethr⟧ for Oracle-threshold. The loss grows with the size of the shift in either direction and is largest when prevalence rises eightfold in odds (⟦f_static_8⟧ against ⟦f_oraclepi_8⟧).
+Table ⟦T:main⟧ and Fig. ⟦F:main⟧ give the main result for LightGBM. Averaged over the six shifted levels, Static-F reaches a mean F1 of ⟦f_static⟧, against ⟦f_oraclepi⟧ for Oracle-π and ⟦f_oraclethr⟧ for Oracle-threshold. The loss grows with the size of the shift in either direction and is largest when prevalence rises eightfold in odds (⟦f_static_8⟧ against ⟦f_oraclepi_8⟧).
 
 PAFT-Bayes attains ⟦f_paft⟧, closing ⟦gap_closed⟧% of the gap between Static-F and Oracle-π. It improves on Static-F on all ⟦n_ds⟧ datasets, with a mean difference of ⟦gain_static⟧ (95% CI ⟦gain_static_ci⟧; Holm-adjusted *p* ⟦p_static⟧; rank-biserial ⟦rb_static⟧; Table ⟦T:stats⟧). The gain is stable across seeds (⟦seed_gain⟧). It also exceeds EM-Fixed by ⟦gain_emfixed⟧ and PrevMatch by ⟦gain_prevmatch⟧ on every dataset. As Corollary 1 predicts, EM-Fixed is close to PAFT when prevalence rises but falls to or below the level of Static-F when prevalence falls (Table ⟦T:main⟧, ρ < 1), where its fixed posterior threshold is too permissive.
 
-**PAFT does not outperform DTA-EM.** The decision-theoretic rule on EM-corrected posteriors reaches ⟦f_dta⟧. PAFT-Bayes is better on ⟦wins_dta⟧ of ⟦n_ds⟧ datasets (median difference ⟦med_dta⟧) and has the best average rank (⟦rank_paft⟧ against ⟦rank_dta⟧; Figure ⟦F:ranks⟧), but its mean is ⟦gain_dta_abs⟧ lower because of two datasets with very few validation positives (creditcard and APSFailure, Section 6.9); the difference is not significant (*p* = ⟦p_dta⟧), and the difference in average rank is below the Nemenyi critical difference of ⟦cd⟧. The two rules should be regarded as equivalent in F1 under label shift. A Friedman test rejects equality of the ten rules (χ² = ⟦friedman_chi⟧, *p* ⟦friedman_p⟧).
+**PAFT does not outperform DTA-EM.** The decision-theoretic rule on EM-corrected posteriors reaches ⟦f_dta⟧. PAFT-Bayes is better on ⟦wins_dta⟧ of ⟦n_ds⟧ datasets (median difference ⟦med_dta⟧) and has the best average rank (⟦rank_paft⟧ against ⟦rank_dta⟧; Fig. ⟦F:ranks⟧), but its mean is ⟦gain_dta_abs⟧ lower because of two datasets with very few validation positives (creditcard and APSFailure, Section 6.9); the difference is not significant (*p* = ⟦p_dta⟧), and the difference in average rank is below the Nemenyi critical difference of ⟦cd⟧. The 90% bootstrap confidence interval of the mean difference (⟦eq_ci⟧) lies within ±0.01, so the two rules are equivalent in mean F1 at that margin under label shift, although the difference on a single dataset reaches ⟦eq_max⟧ (⟦eq_ds⟧). A Friedman test rejects equality of the ten rules (χ² = ⟦friedman_chi⟧, *p* ⟦friedman_p⟧).
+
+**Cells with almost no positives.** Because batches are conditioned on containing at least one positive, cells whose expected number of positives is below one have a realised prevalence above the nominal one. Restricting the analysis to cells with at least 5 or at least 20 expected positives leaves the conclusions unchanged (gain over Static-F ⟦sens5_static⟧ and ⟦sens20_static⟧; difference to DTA-EM ⟦sens5_dta⟧ and ⟦sens20_dta⟧; Supplementary Table S18).
 
 **Cost when nothing has shifted.** At ρ = 1 every adaptive rule pays a small price for estimating a prevalence that has not changed: PAFT-Bayes is ⟦noshift_cost⟧ below Static-F (95% CI ⟦noshift_ci⟧; Holm-adjusted *p* = ⟦noshift_p⟧), and DTA-EM is at the same level (⟦f_dta_1⟧ against ⟦f_paft_1⟧).
 
@@ -182,13 +184,13 @@ PAFT-Bayes attains ⟦f_paft⟧, closing ⟦gap_closed⟧% of the gap between St
 
 ## 6.2 Other base learners and metrics (RQ4)
 
-The pattern is the same for all four learners (Supplementary Table S1): the gain of PAFT-Bayes over Static-F is ⟦gain_xgb⟧ for XGBoost, ⟦gain_logreg⟧ for logistic regression and ⟦gain_mlp⟧ for the perceptron (all Holm-adjusted *p* < 0.001), and in each case PAFT-Bayes wins on most datasets against DTA-EM while having a slightly lower mean. Table ⟦T:metrics⟧ reports other metrics at *m* = 2,000. PAFT-Bayes improves on Static-F for F~0.5~ (⟦gain_f05⟧), F~2~ (⟦gain_f2⟧) and MCC (⟦gain_mcc⟧; all Holm-adjusted *p* < 0.01). For MCC the decision-theoretic formula does not apply, so PAFT is the only adaptive rule in the comparison that addresses it directly. For F~0.5~ DTA-EM has a higher mean than PAFT-Bayes (⟦dta_f05⟧ against ⟦paft_f05⟧), not significantly (*p* = ⟦p_f05_dta⟧).
+The pattern is the same for all four learners (Supplementary Table S1): the gain of PAFT-Bayes over Static-F is ⟦gain_xgb⟧ for XGBoost, ⟦gain_logreg⟧ for logistic regression and ⟦gain_mlp⟧ for the perceptron (all Holm-adjusted *p* < 0.001), and in each case PAFT-Bayes wins on most datasets against DTA-EM while having a slightly lower mean; the signed-rank test, which ignores the size of the two large losses, nominally favours PAFT-Bayes for XGBoost (*p* = ⟦p_dta_xgb⟧) and the perceptron (*p* = ⟦p_dta_mlp⟧), which we do not interpret as superiority. Table ⟦T:metrics⟧ reports other metrics at *m* = 2,000. PAFT-Bayes improves on Static-F for F~0.5~ (⟦gain_f05⟧), F~2~ (⟦gain_f2⟧) and MCC (⟦gain_mcc⟧; all Holm-adjusted *p* < 0.01). For MCC the decision-theoretic formula does not apply, so PAFT is the only adaptive rule in the comparison that addresses it directly. For F~0.5~ DTA-EM has a higher mean than PAFT-Bayes (⟦dta_f05⟧ against ⟦paft_f05⟧), not significantly (*p* = ⟦p_f05_dta⟧).
 
 ⟦TABLE:metrics⟧
 
 ## 6.3 Ablation (RQ2)
 
-Table ⟦T:ablation⟧ removes or replaces each component. (i) *Posterior versus point estimate.* The Bayes threshold improves on the plug-in rule with the same likelihood on all ⟦n_ds⟧ datasets (⟦abl_plug⟧, Holm-adjusted *p* < 0.001); the benefit is concentrated in small batches (⟦abl_plug_100⟧ at *m* = 100 against ⟦abl_plug_10000⟧ at *m* = 10,000), where a point estimate of a rare prevalence is unreliable. With *m* = 100 the plug-in rule is slightly worse than Static-F. (ii) *Prior width.* σ between 0.5 and 2 gives nearly identical results; wider or flat priors lose up to ⟦abl_flat⟧ (Figure ⟦F:ablation⟧). A tighter prior (σ = 1) is marginally better than our pre-specified σ = 2 (⟦abl_sd1⟧, Holm-adjusted *p* = ⟦abl_sd1_p⟧); we keep σ = 2 as specified. (iii) *Quantifier.* With the plug-in rule, the choice among mixture maximum likelihood, adjusted counts, probabilistic adjusted counts and EM matters little, and all are clearly better than Hellinger-distance matching in small batches; handling uncertainty matters more than the particular estimator. (iv) *Decision rule.* Applying the decision-theoretic top-*k* rule to PAFT's own histogram posterior gives ⟦abl_dtahist⟧ relative to (7) (*p* = ⟦abl_dtahist_p⟧), so the equivalence with DTA-EM is not an artefact of the calibrator. (v) *Guard.* Under pure label shift the guard should be inactive; it costs ⟦abl_guard⟧ on average because it fires on some batches (Section 6.4).
+Table ⟦T:ablation⟧ removes or replaces each component. (i) *Posterior versus point estimate.* The Bayes threshold improves on the plug-in rule with the same likelihood on all ⟦n_ds⟧ datasets (⟦abl_plug⟧, Holm-adjusted *p* < 0.001); the benefit is concentrated in small batches (⟦abl_plug_100⟧ at *m* = 100 against ⟦abl_plug_10000⟧ at *m* = 10,000), where a point estimate of a rare prevalence is unreliable. With *m* = 100 the plug-in rule is slightly worse than Static-F. (ii) *Prior width.* σ between 0.5 and 2 gives nearly identical results; wider or flat priors lose up to ⟦abl_flat⟧ (Fig. ⟦F:ablation⟧). A tighter prior (σ = 1) is marginally better than our pre-specified σ = 2 (⟦abl_sd1⟧, Holm-adjusted *p* = ⟦abl_sd1_p⟧); we keep σ = 2 as specified. (iii) *Quantifier.* With the plug-in rule, the choice among mixture maximum likelihood, adjusted counts, probabilistic adjusted counts and EM matters little, and all are clearly better than Hellinger-distance matching in small batches; handling uncertainty matters more than the particular estimator. (iv) *Decision rule.* Applying the decision-theoretic top-*k* rule to PAFT's own histogram posterior gives ⟦abl_dtahist⟧ relative to (7) (*p* = ⟦abl_dtahist_p⟧), so the equivalence with DTA-EM is not an artefact of the calibrator. (v) *Guard.* Under pure label shift the guard should be inactive; it costs ⟦abl_guard⟧ on average because it fires on some batches (Section 6.4).
 
 ⟦TABLE:ablation⟧
 
@@ -198,9 +200,9 @@ Table ⟦T:ablation⟧ removes or replaces each component. (i) *Posterior versus
 
 **Small validation sets.** With 25% and 10% of the validation split (Table ⟦T:robust⟧), PAFT-Bayes still gains ⟦val25_gain⟧ and ⟦val10_gain⟧ over Static-F, but at 10% DTA-EM is significantly better than PAFT-Bayes (⟦val10_dta⟧, Holm-adjusted *p* = ⟦val10_dta_p⟧): the empirical ROC surface degrades faster than isotonic posteriors when validation positives are scarce.
 
-**Calibrator of the baselines.** Replacing isotonic by Platt-type calibration leaves DTA-EM at ⟦platt_dta⟧ against ⟦platt_paft⟧ for PAFT-Bayes (*p* = ⟦platt_p⟧).
+**Calibrator of the baselines.** EM prior correction is sensitive to calibration [⟦c:alexandari2020⟧]. Replacing isotonic calibration by a two-parameter logistic map of the logit score, which in the binary case coincides with the bias-corrected temperature scaling recommended there, leaves DTA-EM at ⟦platt_dta⟧ against ⟦platt_paft⟧ for PAFT-Bayes (*p* = ⟦platt_p⟧).
 
-**Violated label shift.** Adding Gaussian noise of 0.1, 0.25 and 0.5 feature standard deviations to the deployment features changes the class-conditional score distributions (Figure ⟦F:robust⟧). Unguarded adaptive rules then lose their advantage: at the lowest noise level PAFT-Bayes (⟦noise01_paft⟧) and DTA-EM (⟦noise01_dta⟧) are no better than Static-F (⟦noise01_static⟧). PAFT-Guard, whose test fires on ⟦noise01_fire⟧% of these batches, obtains the highest mean F1 of all label-free rules at every noise level (⟦noise01_guard⟧, ⟦noise025_guard⟧, ⟦noise05_guard⟧), but its differences from PAFT-Bayes and Static-F are not significant at the dataset level (Supplementary Table S6), so we report this as a consistent tendency rather than an established effect.
+**Violated label shift.** Adding Gaussian noise of 0.1, 0.25 and 0.5 feature standard deviations to the deployment features changes the class-conditional score distributions (Fig. ⟦F:robust⟧). Unguarded adaptive rules then lose their advantage: at the lowest noise level PAFT-Bayes (⟦noise01_paft⟧) and DTA-EM (⟦noise01_dta⟧) are no better than Static-F (⟦noise01_static⟧). PAFT-Guard, whose test fires on ⟦noise01_fire⟧% of these batches, obtains the highest mean F1 of all label-free rules at every noise level (⟦noise01_guard⟧, ⟦noise025_guard⟧, ⟦noise05_guard⟧), but its differences from PAFT-Bayes and Static-F are not significant at the dataset level (Supplementary Table S6), so we report this as a consistent tendency rather than an established effect.
 
 **Guard firing under pure label shift.** With α~g~ = 0.01 the guard fires on ⟦fire_500⟧%, ⟦fire_2000⟧% and ⟦fire_10000⟧% of batches of size 500, 2,000 and 10,000, above the nominal level. The excess is concentrated in two datasets (Supplementary Table S5): creditcard, where it fires on every batch, and APSFailure (⟦fire_aps⟧%). Both have few validation and test positives (about ⟦cc_valpos⟧ and ⟦cc_testpos⟧ for creditcard), so that batches resampled with replacement from the small test pool reproduce that pool's sampling deviation from the validation sample in every batch; on the other 16 datasets the median firing rate is ⟦fire_median16⟧%. To separate this protocol artefact from the test itself, we simulated binormal scores in which every batch consists of fresh draws (Experiment 10, Supplementary Table S16): under label shift the firing rate was at or below the nominal 1% in ⟦gsim_share⟧% of the 24 combinations of validation size, batch size and prevalence (maximum ⟦gsim_max⟧%, with 50 validation positives and *m* = 10,000), and with at least 500 validation positives and *m* ≥ 2,000 a displacement of the scores by half a standard deviation was detected in at least ⟦gsim_power⟧% of batches. The test is thus conservative when deployment positives are fresh, and in our resampling protocol it makes PAFT-Guard revert to the static rule for the rarest classes. Table ⟦T:guard⟧ shows that results are insensitive to α~g~ between 0.001 and 0.05.
 
@@ -210,13 +212,13 @@ Under the conditions for which they are designed, prevalence-adaptive rules are 
 
 ## 6.6 Real shifts: label-free adaptation does not help (RQ4)
 
-Table ⟦T:real⟧ and Figure ⟦F:real⟧ report the six real suites. The picture is different from the controlled benchmark.
+Table ⟦T:real⟧ and Fig. ⟦F:real⟧ report the six real suites. The picture is different from the controlled benchmark.
 
 *ACS-income-states.* State prevalences range from ⟦acs_pimin⟧ to ⟦acs_pimax⟧ against ⟦acs_pi0⟧ in California. Unguarded rules are worse than the static threshold: PAFT-Bayes loses ⟦acs_loss⟧ (95% CI ⟦acs_loss_ci⟧; Holm-adjusted *p* < 0.001) and DTA-EM slightly more. Oracle-π would gain ⟦acs_oraclegain⟧, so the validation threshold map transfers; what fails is quantification, with a mean absolute prevalence error of ⟦acs_mae⟧ (Table ⟦T:realinfo⟧), because the feature distribution differs between states.
 
 *Electricity-time.* PAFT-Bayes loses ⟦elec_loss⟧ (Holm-adjusted *p* < 0.001) and all EM-based rules behave alike. Here even Oracle-π gives no gain over Static-F (⟦elec_oraclepi⟧ against ⟦elec_static⟧), while Oracle-threshold reaches ⟦elec_oraclethr⟧: the relation between score and label has changed, and no prevalence correction can repair it.
 
-*Creditcard-time and Elliptic-time.* Differences between PAFT-Bayes, DTA-EM and Static-F are small and not significant (Supplementary Table S7). In the Elliptic data the classifier collapses after time step 42 (F1 near zero for all rules, Figure ⟦F:real⟧), a known concept change in that dataset.
+*Creditcard-time and Elliptic-time.* Differences between PAFT-Bayes, DTA-EM and Static-F are small and not significant (Supplementary Table S7). In the Elliptic data the classifier collapses after time step 42 (F1 near zero for all rules, Fig. ⟦F:real⟧), a change in the data that its originators also report [⟦c:weber2019⟧].
 
 *Bank-time.* Adaptive rules exceed Static-F by ⟦bank_gain⟧, but this result should not be read as a success: the mean deployment AUC is ⟦bank_auc⟧, i.e. the classifier carries no information after the temporal change, the estimated prevalence is close to one, and the "gain" is that of predicting nearly everything positive as prevalence climbs to ⟦bank_pimax⟧.
 
@@ -242,13 +244,13 @@ On one CPU thread (Table ⟦T:eff⟧), PAFT-Bayes takes ⟦eff_paft_2000⟧ ms f
 
 **Where PAFT loses.** Per batch, PAFT-Bayes is better than Static-F in ⟦err_win8⟧% of batches at ρ = 8 but only ⟦err_win05⟧% at ρ = 1/2, where it is worse in ⟦err_loss05⟧% (Supplementary Table S8): for small shifts the estimation noise is comparable to the benefit. Losses are bounded; the worst decile of the per-batch difference is never below ⟦err_worstdecile⟧.
 
-**Few positives.** Regret against the oracle threshold falls from ⟦err_regret_15⟧ for batches with 1–5 positives to ⟦err_regret_1000⟧ for batches with more than 1,000, in step with the relative prevalence error (median ⟦err_rel_15⟧ and ⟦err_rel_1000⟧; Table ⟦T:error⟧, Figure ⟦F:error⟧). With 1–5 positives PAFT-Bayes is no better than Static-F (⟦err_paft_15⟧ against ⟦err_static_15⟧), while DTA-EM retains an advantage (⟦err_dta_15⟧).
+**Few positives.** Regret against the oracle threshold falls from ⟦err_regret_15⟧ for batches with 1–5 positives to ⟦err_regret_1000⟧ for batches with more than 1,000, in step with the relative prevalence error (median ⟦err_rel_15⟧ and ⟦err_rel_1000⟧; Table ⟦T:error⟧, Fig. ⟦F:error⟧). With 1–5 positives PAFT-Bayes is no better than Static-F (⟦err_paft_15⟧ against ⟦err_static_15⟧), while DTA-EM retains an advantage (⟦err_dta_15⟧).
 
 **Datasets.** The gain over Static-F is smallest for creditcard (⟦err_cc_gain⟧), where PAFT-Bayes is ⟦err_cc_dta⟧ below DTA-EM. With about ⟦cc_valpos⟧ validation positives the empirical true-positive-rate function is a coarse step function and the mixture histogram has only eight bins; the transductive rule, which ranks the batch itself, is less affected. The gain does not correlate with classifier AUC (Spearman ρ = ⟦err_sp_auc⟧, *p* = ⟦err_sp_auc_p⟧) and tends to increase with development prevalence (ρ = ⟦err_sp_prev⟧, *p* = ⟦err_sp_prev_p⟧).
 
 **Direction of the threshold.** In ⟦err_dir⟧% of shifted batches the PAFT threshold on the raw score moves opposite to the prevalence, as Corollary 2 anticipates.
 
-**Real shifts.** The dominant failure is not a property of PAFT but of the shared assumption: when (1) fails, the mixture likelihood attributes covariate change to prevalence change (Figure ⟦F:real⟧, top row), and every rule that trusts the estimate inherits the error.
+**Real shifts.** The dominant failure is not a property of PAFT but of the shared assumption: when (1) fails, the mixture likelihood attributes covariate change to prevalence change (Fig. ⟦F:real⟧, top row), and every rule that trusts the estimate inherits the error.
 
 ⟦TABLE:error⟧
 

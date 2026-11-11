@@ -45,7 +45,9 @@ def fig_workflow(F):
 
 
 def fig_mechanism(root, F):
-    z = np.load(os.path.join(root, "scores", "controlled", "bank_marketing__lgbm__s0.npz"))
+    cand = sorted(glob.glob(os.path.join(root, "scores", "controlled", "*__lgbm__s0.npz")))
+    pref = [c for c in cand if "bank_marketing" in c]
+    z = np.load((pref or cand)[0])   # bank-marketing in the full run; first available dataset in quick mode
     sm = ScoreModel(z["s_val"], z["y_val"])
     fig, ax = plt.subplots(1, 3, figsize=(7.2, 2.4))
     pis = [sm.pi0 / 4, sm.pi0, min(4 * sm.pi0, 0.6)]
@@ -70,8 +72,8 @@ def fig_main(R, F):
     fig, ax = plt.subplots(1, 2, figsize=(7.2, 2.8))
     for m in ["static", "em_fixed", "dta_em", "paft_bayes", "oracle_pi"]:
         ax[0].plot(piv.index, piv[m] - piv["static"], marker=MK[m], ms=4, lw=1.1, color=COL[m], label=LAB[m])
-    ax[0].set_xscale("log", base=2); ax[0].set_xticks(piv.index); ax[0].set_xticklabels(["1/8", "1/4", "1/2", "1", "2", "4", "8"])
-    ax[0].set_xlabel("odds multiplier ρ (deployment vs. development)"); ax[0].set_ylabel("ΔF1 vs. Static-F"); ax[0].legend(fontsize=7); ax[0].set_title("(a) mean over 18 datasets", fontsize=8)
+    ax[0].set_xscale("log", base=2); ax[0].set_xticks(piv.index); ax[0].set_xticklabels([(f"1/{round(1/r)}" if r < 1 else f"{r:g}") for r in piv.index])
+    ax[0].set_xlabel("odds multiplier ρ (deployment vs. development)"); ax[0].set_ylabel("ΔF1 vs. Static-F"); ax[0].legend(fontsize=7); ax[0].set_title(f"(a) mean over {g.dataset.nunique()} datasets", fontsize=8)
     w = g[g.rho != 1].groupby(["dataset", "method"])["value"].mean().unstack()
     diff = (w["paft_bayes"] - w["static"]).sort_values()
     ax[1].barh(range(len(diff)), diff.values, color=["#D55E00" if v > 0 else "#0072B2" for v in diff.values])
@@ -173,7 +175,8 @@ def fig_efficiency(R, F):
 
 def main(root):
     R, F = os.path.join(root, "results"), os.path.join(root, "figures"); os.makedirs(F, exist_ok=True)
-    fig_workflow(F); fig_mechanism(root, F); fig_main(R, F); fig_ranks(root, F); fig_ablation(R, F); fig_robust(root, F); fig_real(R, F); fig_error(R, F); fig_efficiency(R, F)
+    for fn, args in [(fig_workflow, (F,)), (fig_mechanism, (root, F)), (fig_main, (R, F)), (fig_ranks, (root, F)), (fig_ablation, (R, F)), (fig_robust, (root, F)), (fig_real, (R, F)), (fig_error, (R, F)), (fig_efficiency, (R, F))]:
+        fn(*args)
     print("figures written to", F)
 
 

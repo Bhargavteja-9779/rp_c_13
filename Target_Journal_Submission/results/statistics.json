@@ -170,5 +170,14 @@
   "median_fire_h0": 0.002,
   "share_cells_le_nominal": 0.9583333333333334,
   "min_power_shift05_n500": 0.996
+ },
+ "equivalence_paft_vs_dta": {
+  "mean_diff": -0.001368813348094448,
+  "ci90_lo": -0.005972193333431935,
+  "ci90_hi": 0.0017080613875224539,
+  "margin": 0.01,
+  "equivalent_at_margin": true,
+  "max_abs_dataset_diff": 0.041690726802098066,
+  "dataset_of_max": "creditcard"
  }
 }

@@ -5,7 +5,7 @@
     python run_all.py --mode full      # the complete scientific experiment (about 1 h on 4 CPU cores)
 
 Stages: data download -> base-model training (score cache) -> controlled label-shift benchmark ->
-real-shift suites -> efficiency -> statistics + tables -> figures. Every stage is resumable.
+real-shift suites -> efficiency -> label-assisted experiment -> guard calibration -> statistics + tables -> figures. Every stage is resumable.
 Outputs go to <root>/results, <root>/tables, <root>/figures (root = parent folder for `full`,
 `quick_run/` for `quick`, so a smoke test never overwrites the reported results)."""
 from __future__ import annotations
@@ -41,6 +41,8 @@ def main():
     sh(["experiments/run_controlled.py", "--config", cfg, "--root", root], os.path.join(logs, "run_controlled.log"))
     sh(["experiments/run_real.py", "--config", cfg, "--root", root], os.path.join(logs, "run_real.log"))
     sh(["experiments/run_efficiency.py", "--config", cfg, "--root", root], os.path.join(logs, "run_efficiency.log"))
+    sh(["experiments/run_labelled.py", "--config", cfg, "--root", root], os.path.join(logs, "run_labelled.log"))
+    sh(["experiments/run_guard_calibration.py", "--root", root, "--reps", "100" if a.mode == "quick" else "500"], os.path.join(logs, "run_guard_calibration.log"))
     sh(["scripts/make_tables.py", "--root", root], os.path.join(logs, "make_tables.log"))
     sh(["scripts/make_figures.py", "--root", root], os.path.join(logs, "make_figures.log"))
     print(f"done in {(time.time()-t0)/60:.1f} min; outputs in {root}")

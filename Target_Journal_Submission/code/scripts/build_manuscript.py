@@ -70,6 +70,11 @@ def build(root):
     b = t3b.loc["Static-F"]; P.update(noshift_cost=f3(abs(b.mean_diff)), noshift_ci=ci(b.ci95_lo, b.ci95_hi), noshift_p=f"{b.p_holm:.3f}")
     for m in ["xgb", "logreg", "mlp"]:
         P["gain_" + m] = s3(t4b[(t4b.model == m) & (t4b.baseline == "Static-F")].mean_diff.iloc[0])
+    for m in ["xgb", "mlp"]:
+        P["p_dta_" + m] = f"{t4b[(t4b.model == m) & (t4b.baseline == 'DTA-EM')].p_wilcoxon.iloc[0]:.3f}"
+    eq = S["equivalence_paft_vs_dta"]; P.update(eq_ci=ci(eq["ci90_lo"], eq["ci90_hi"]), eq_max=f3(eq["max_abs_dataset_diff"]), eq_ds=eq["dataset_of_max"])
+    sx = T("tableS_sensitivity_expected_positives"); gsx = lambda c, bl: s3(sx[(sx.cells == c) & (sx.baseline == bl)].mean_diff.iloc[0])
+    P.update(sens5_static=gsx("expected positives >= 5", "static"), sens20_static=gsx("expected positives >= 20", "static"), sens5_dta=gsx("expected positives >= 5", "dta_em"), sens20_dta=gsx("expected positives >= 20", "dta_em"))
     g8 = lambda mt, bl, c: t8b[(t8b.metric == mt) & (t8b.baseline == bl)][c].iloc[0]
     P.update(gain_f05=s3(g8("f0.5", "static", "mean_diff")), gain_f2=s3(g8("f2", "static", "mean_diff")), gain_mcc=s3(g8("mcc", "static", "mean_diff")),
              dta_f05=f3(t8.loc["DTA-EM", "f0.5"]), paft_f05=f3(t8.loc["PAFT-Bayes", "f0.5"]), p_f05_dta=f"{g8('f0.5', 'dta_em', 'p_wilcoxon'):.2f}")
@@ -235,7 +240,7 @@ def build(root):
 
 def supplementary(root):
     T = lambda n, **k: pd.read_csv(os.path.join(root, "tables", n + ".csv"), **k)
-    parts = ["---\ntitle: \"Supplementary Information: Prevalence-adaptive F-measure thresholding for imbalanced tabular classification\"\n---\n",
+    parts = ["---\ntitle: \"Supplementary Information: Prevalence-adaptive F-measure thresholding for imbalanced tabular classification under label shift\"\n---\n",
              "# S1 Implementation details\n\n"
              "**Base learners (identical for all datasets).** LightGBM: up to 2,000 trees, learning rate 0.05, 31 leaves, row and column subsampling 0.8, minimum 20 samples per leaf, early stopping after 50 rounds on a 10% slice of the training split. "
              "XGBoost: histogram method, depth 6, learning rate 0.05, subsampling 0.8, up to 2,000 trees, early stopping after 50 rounds. Logistic regression: L2 penalty with C = 1, at most 300 L-BFGS iterations. "
@@ -276,6 +281,7 @@ def supplementary(root):
                         ("numerai28.6", 23517, "excluded: minority prevalence 49 %"), ("mammography", 310, "excluded: 260 minority instances"), ("road-safety", 42803, "excluded: target not binary"),
                         ("data id 45557", 45557, "excluded: fewer than 10,000 instances"), ("SantanderCustomerSatisfaction", 42395, "eligible by description but download failed repeatedly; not included")], columns=["Dataset", "OpenML id", "Decision"])
     add("S17 Dataset screening", scr, "**Table S17** OpenML datasets screened against the inclusion criteria (binary target, at least 10,000 instances, at least 400 minority instances, minority prevalence at most 30 %)", index=False)
+    add("S18 Sensitivity to cells with few expected positives", T("tableS_sensitivity_expected_positives").drop(columns=["reference", "median_diff"]), "**Table S18** Paired tests of PAFT-Bayes restricted to benchmark cells whose expected number of positives (target prevalence times batch size) exceeds a minimum", index=False, fmt={"p_wilcoxon": "{:.5f}", "p_holm": "{:.5f}", "mean_diff": "{:+.4f}", "ci95_lo": "{:+.4f}", "ci95_hi": "{:+.4f}", "share_of_cells": "{:.2f}"})
     parts.append("\n![**Fig. S1** Latency of the decision rules as a function of batch size (one CPU thread)](../figures/fig9_efficiency.png){width=3.5in}\n")
     p = os.path.join(root, "supplementary", "Supplementary_Information.md"); os.makedirs(os.path.dirname(p), exist_ok=True)
     open(p, "w", encoding="utf8").write("\n".join(parts)); return p
@@ -399,7 +405,7 @@ def title_page(root):
     from docx.shared import Pt
     d = Document(); st = d.styles["Normal"]; st.font.name = "Times New Roman"; st.font.size = Pt(12)
     d.add_heading("Title page (submitted separately for double-anonymised review)", 2)
-    d.add_paragraph("Title: Prevalence-adaptive F-measure thresholding for imbalanced tabular classification: a guarded decision layer and its limits under controlled and real distribution shift")
+    d.add_paragraph("Title: Prevalence-adaptive F-measure thresholding for imbalanced tabular classification under label shift: a guarded decision layer and its limits")
     for l in ["Authors: [Author 1 full name]¹, [Author 2 full name]², …", "Affiliations: ¹[Department, Institution, City, Country]; ²[Department, Institution, City, Country]",
               "Corresponding author: [Name], [e-mail address], [postal address]", "ORCID: [0000-0000-0000-0000] for each author",
               "Acknowledgements: [To be completed, or 'Not applicable']", "Funding: [To be completed]", "Competing interests: [To be completed]",

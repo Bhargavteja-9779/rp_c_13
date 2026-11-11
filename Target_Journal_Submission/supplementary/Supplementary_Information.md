@@ -10,7 +10,7 @@ title: "Supplementary Information: Prevalence-adaptive F-measure thresholding fo
 
 **Decision layer.** Candidate thresholds: validation scores of each class, thinned to at most 1,024 class-wise quantiles. Histogram: B = min(32, max(8, ⌊n1/10⌋)) class-balanced quantile bins, Laplace smoothing 0.5. Prevalence grid: 161 points uniform in logit(π0) ± 9. Prior: σ = 2. Guard level: 0.01. EM baseline: at most 200 iterations, tolerance 1e-7, on isotonic-calibrated posteriors.
 
-**Random seeds.** Splits and learners use seeds 0–4. Deployment batches use a generator seeded by a CRC-32 hash of (dataset, model, seed, condition, metric, ρ, m), so every result is exactly reproducible; a complete re-run of the main experiment reproduced all 90,720 result rows with zero difference.
+**Random seeds.** Splits and learners use seeds 0–4. Static-Bag thresholds are computed on candidate thresholds thinned to 512 quantiles per class. Deployment batches use a generator seeded by a CRC-32 hash of (dataset, model, seed, condition, metric, ρ, m), so every result is exactly reproducible; a complete re-run of the main experiment reproduced all 90,720 result rows with zero difference.
 
 **Hardware and software.** 4 CPU cores, 15 GB RAM, no GPU; Python 3.13, scikit-learn 1.9.1, LightGBM 4.7.0, XGBoost 3.4.1, PyTorch 2.15.0 (CPU). The device (CPU, CUDA or Apple MPS) is detected automatically.
 
@@ -97,42 +97,42 @@ title: "Supplementary Information: Prevalence-adaptive F-measure thresholding fo
 
 # S5 Real suites: all rules including the exploratory sequential variant
 
-| method | acs_income_states | bank_time | creditcard_time | electricity_time | elliptic_time |
-|---|---:|---:|---:|---:|---:|
-| Default 0.5 | 0.714 | 0.000 | 0.645 | 0.449 | 0.483 |
-| Static-F | 0.702 | 0.233 | 0.645 | 0.450 | 0.483 |
-| Static-Bag | 0.702 | 0.234 | 0.644 | 0.451 | 0.483 |
-| EM-0.5 | 0.707 | 0.265 | 0.636 | 0.423 | 0.477 |
-| EM-Fixed | 0.692 | 0.265 | 0.551 | 0.424 | 0.478 |
-| PrevMatch | 0.708 | 0.263 | 0.635 | 0.384 | 0.481 |
-| DTA-EM | 0.692 | 0.265 | 0.633 | 0.425 | 0.484 |
-| PAFT-Plug | 0.693 | 0.265 | 0.638 | 0.426 | 0.477 |
-| PAFT-Bayes | 0.693 | 0.265 | 0.641 | 0.426 | 0.477 |
-| PAFT-Guard | 0.702 | 0.233 | 0.645 | 0.450 | 0.483 |
-| PAFT-Seq (exploratory) | 0.693 | 0.265 | 0.643 | 0.426 | 0.477 |
-| Oracle-π | 0.713 | 0.260 | 0.646 | 0.450 | 0.480 |
-| Oracle-threshold | 0.720 | 0.272 | 0.729 | 0.721 | 0.600 |
+| method | acs_income_states | bank_time | creditcard_time | electricity_time | elliptic_time | kdd99_time |
+|---|---:|---:|---:|---:|---:|---:|
+| Default 0.5 | 0.714 | 0.000 | 0.645 | 0.449 | 0.483 | 0.973 |
+| Static-F | 0.702 | 0.233 | 0.645 | 0.450 | 0.483 | 0.973 |
+| Static-Bag | 0.702 | 0.234 | 0.644 | 0.451 | 0.483 | 0.975 |
+| EM-0.5 | 0.707 | 0.265 | 0.636 | 0.423 | 0.477 | 0.947 |
+| EM-Fixed | 0.692 | 0.265 | 0.551 | 0.424 | 0.478 | 0.960 |
+| PrevMatch | 0.708 | 0.263 | 0.635 | 0.384 | 0.481 | 0.973 |
+| DTA-EM | 0.692 | 0.265 | 0.633 | 0.425 | 0.484 | 0.947 |
+| PAFT-Plug | 0.693 | 0.265 | 0.638 | 0.426 | 0.477 | 0.947 |
+| PAFT-Bayes | 0.693 | 0.265 | 0.641 | 0.426 | 0.477 | 0.947 |
+| PAFT-Guard | 0.702 | 0.233 | 0.645 | 0.450 | 0.483 | 0.973 |
+| PAFT-Seq (exploratory) | 0.693 | 0.265 | 0.643 | 0.426 | 0.477 | 0.947 |
+| Oracle-π | 0.713 | 0.260 | 0.646 | 0.450 | 0.480 | 0.950 |
+| Oracle-threshold | 0.720 | 0.272 | 0.729 | 0.721 | 0.600 | 0.988 |
 
 : **Table S4** Mean F1 on real-shift suites. PAFT-Seq centres the prior on the previous batch's posterior mean (σ = 1); it was not part of the pre-specified comparison
 
 
 # S5 (continued)
 
-| method | acs_income_states | bank_time | creditcard_time | electricity_time | elliptic_time |
-|---|---:|---:|---:|---:|---:|
-| Default 0.5 | 0.001 | 0.000 | 0.075 | 0.008 | 0.011 |
-| Static-F | 0.003 | 0.034 | 0.075 | 0.007 | 0.011 |
-| Static-Bag | 0.003 | 0.031 | 0.072 | 0.008 | 0.011 |
-| EM-0.5 | 0.001 | 0.000 | 0.069 | 0.009 | 0.004 |
-| EM-Fixed | 0.004 | 0.000 | 0.228 | 0.006 | 0.004 |
-| PrevMatch | 0.002 | 0.004 | 0.073 | 0.016 | 0.011 |
-| DTA-EM | 0.003 | 0.000 | 0.072 | 0.008 | 0.019 |
-| PAFT-Plug | 0.003 | 0.000 | 0.079 | 0.008 | 0.004 |
-| PAFT-Bayes | 0.003 | 0.000 | 0.074 | 0.008 | 0.005 |
-| PAFT-Guard | 0.003 | 0.034 | 0.075 | 0.007 | 0.011 |
-| PAFT-Seq (exploratory) | 0.003 | 0.000 | 0.071 | 0.008 | 0.005 |
-| Oracle-π | 0.001 | 0.004 | 0.069 | 0.008 | 0.006 |
-| Oracle-threshold | 0.001 | 0.001 | 0.067 | 0.004 | 0.014 |
+| method | acs_income_states | bank_time | creditcard_time | electricity_time | elliptic_time | kdd99_time |
+|---|---:|---:|---:|---:|---:|---:|
+| Default 0.5 | 0.001 | 0.000 | 0.075 | 0.008 | 0.011 | 0.007 |
+| Static-F | 0.003 | 0.034 | 0.075 | 0.007 | 0.011 | 0.007 |
+| Static-Bag | 0.003 | 0.031 | 0.072 | 0.008 | 0.011 | 0.005 |
+| EM-0.5 | 0.001 | 0.000 | 0.069 | 0.009 | 0.004 | 0.034 |
+| EM-Fixed | 0.004 | 0.000 | 0.228 | 0.006 | 0.004 | 0.012 |
+| PrevMatch | 0.002 | 0.004 | 0.073 | 0.016 | 0.011 | 0.007 |
+| DTA-EM | 0.003 | 0.000 | 0.072 | 0.008 | 0.019 | 0.034 |
+| PAFT-Plug | 0.003 | 0.000 | 0.079 | 0.008 | 0.004 | 0.027 |
+| PAFT-Bayes | 0.003 | 0.000 | 0.074 | 0.008 | 0.005 | 0.027 |
+| PAFT-Guard | 0.003 | 0.034 | 0.075 | 0.007 | 0.011 | 0.007 |
+| PAFT-Seq (exploratory) | 0.003 | 0.000 | 0.071 | 0.008 | 0.005 | 0.027 |
+| Oracle-π | 0.001 | 0.004 | 0.069 | 0.008 | 0.006 | 0.029 |
+| Oracle-threshold | 0.001 | 0.001 | 0.067 | 0.004 | 0.014 | 0.001 |
 
 : **Table S4b** Standard deviation over seeds of the values in Table S4
 
@@ -161,6 +161,10 @@ title: "Supplementary Information: Prevalence-adaptive F-measure thresholding fo
 | elliptic_time | logreg | 0.291 | 0.293 | 0.305 | 0.305 |
 | elliptic_time | mlp | 0.272 | 0.202 | 0.358 | 0.361 |
 | elliptic_time | xgb | 0.481 | 0.480 | 0.486 | 0.486 |
+| kdd99_time | lgbm | 0.947 | 0.947 | 0.973 | 0.973 |
+| kdd99_time | logreg | 0.937 | 0.889 | 0.941 | 0.941 |
+| kdd99_time | mlp | 0.926 | 0.906 | 0.936 | 0.936 |
+| kdd99_time | xgb | 0.954 | 0.942 | 0.973 | 0.973 |
 
 : **Table S4c** Real-shift suites by base learner
 
@@ -246,6 +250,11 @@ title: "Supplementary Information: Prevalence-adaptive F-measure thresholding fo
 | elliptic_time | em_fixed | 15 | −0.0008 | −0.0032 | +0.0024 | 2 | 7 | 6 | 0.2076 | −0.500 | 0.8986 |
 | elliptic_time | paft_guard | 15 | −0.0053 | −0.0268 | +0.0148 | 4 | 5 | 6 | 0.4446 | −0.273 | 1.0000 |
 | elliptic_time | paft_plug | 15 | +0.0005 | +0.0000 | +0.0015 | 2 | 13 | 0 | 0.1797 | 1.000 | 0.8986 |
+| kdd99_time | static | 14 | −0.0263 | −0.0523 | −0.0060 | 3 | 0 | 11 | 0.0245 | −0.676 | 0.1227 |
+| kdd99_time | dta_em | 14 | +0.0005 | −0.0153 | +0.0169 | 5 | 1 | 8 | 0.5525 | −0.187 | 1.0000 |
+| kdd99_time | em_fixed | 14 | −0.0127 | −0.0284 | +0.0020 | 4 | 1 | 9 | 0.1730 | −0.429 | 0.5189 |
+| kdd99_time | paft_guard | 14 | −0.0263 | −0.0523 | −0.0060 | 3 | 0 | 11 | 0.0245 | −0.676 | 0.1227 |
+| kdd99_time | paft_plug | 14 | +0.0000 | +0.0000 | +0.0000 | 0 | 14 | 0 | 1.0000 | 0.000 | 1.0000 |
 
 : **Table S7** Paired tests of PAFT-Bayes on real suites (unit: deployment batch, averaged over seeds)
 
@@ -361,6 +370,9 @@ title: "Supplementary Information: Prevalence-adaptive F-measure thresholding fo
 | elliptic_time | 50 | 0.483 | 0.477 | 0.486 | 0.486 | 0.477 | 0.486 | 0.480 | 0.602 |
 | elliptic_time | 200 | 0.484 | 0.477 | 0.543 | 0.481 | 0.479 | 0.481 | 0.485 | 0.604 |
 | elliptic_time | 1,000 | 0.863 | 0.864 | 0.875 | 0.863 | 0.864 | 0.863 | 0.863 | 0.883 |
+| kdd99_time | 50 | 0.973 | 0.947 | 0.964 | 0.951 | 0.947 | 0.951 | 0.950 | 0.988 |
+| kdd99_time | 200 | 0.973 | 0.947 | 0.981 | 0.951 | 0.947 | 0.951 | 0.950 | 0.989 |
+| kdd99_time | 1,000 | 0.973 | 0.947 | 0.987 | 0.950 | 0.946 | 0.950 | 0.950 | 0.989 |
 
 : **Table S13** Label-assisted adaptation for all label budgets
 
@@ -417,6 +429,15 @@ title: "Supplementary Information: Prevalence-adaptive F-measure thresholding fo
 | elliptic_time | 1,000 | static | 1 | +0.0004 | +0.0004 | +0.0004 | 1 | 0 | 0 | 1.0000 | 1.000 | 1.0000 |
 | elliptic_time | 1,000 | retune_labels | 1 | −0.0115 | −0.0115 | −0.0115 | 0 | 0 | 1 | 1.0000 | −1.000 | 1.0000 |
 | elliptic_time | 1,000 | paft_bayes | 1 | −0.0003 | −0.0003 | −0.0003 | 0 | 0 | 1 | 1.0000 | −1.000 | 1.0000 |
+| kdd99_time | 50 | static | 14 | −0.0220 | −0.0426 | −0.0070 | 1 | 0 | 13 | 0.0004 | −0.962 | 0.0011 |
+| kdd99_time | 50 | retune_labels | 14 | −0.0128 | −0.0256 | −0.0011 | 4 | 0 | 10 | 0.0676 | −0.562 | 0.1353 |
+| kdd99_time | 50 | paft_bayes | 14 | +0.0043 | −0.0087 | +0.0162 | 11 | 0 | 3 | 0.0785 | 0.543 | 0.1353 |
+| kdd99_time | 200 | static | 14 | −0.0225 | −0.0434 | −0.0067 | 2 | 0 | 12 | 0.0009 | −0.924 | 0.0026 |
+| kdd99_time | 200 | retune_labels | 14 | −0.0303 | −0.0568 | −0.0106 | 4 | 0 | 10 | 0.0107 | −0.752 | 0.0215 |
+| kdd99_time | 200 | paft_bayes | 14 | +0.0039 | −0.0094 | +0.0156 | 9 | 2 | 3 | 0.1361 | 0.487 | 0.1361 |
+| kdd99_time | 1,000 | static | 14 | −0.0238 | −0.0481 | −0.0060 | 2 | 0 | 12 | 0.0009 | −0.924 | 0.0026 |
+| kdd99_time | 1,000 | retune_labels | 14 | −0.0370 | −0.0742 | −0.0115 | 3 | 0 | 11 | 0.0023 | −0.867 | 0.0046 |
+| kdd99_time | 1,000 | paft_bayes | 14 | +0.0025 | −0.0103 | +0.0145 | 8 | 3 | 3 | 0.2860 | 0.364 | 0.2860 |
 
 : **Table S13b** Paired tests of guarded PAFT-L
 
@@ -491,6 +512,63 @@ title: "Supplementary Information: Prevalence-adaptive F-measure thresholding fo
 | stored state: thresholds T x grid G surface (float64) | 329,728 | – | 2.52 |
 
 : **Table S15** All latency and memory measurements
+
+
+# S16 Guard calibration on synthetic scores (Experiment 10)
+
+| score_shift | n1_val | rho=1, m=500 | rho=1, m=2000 | rho=1, m=10000 | rho=4, m=500 | rho=4, m=2000 | rho=4, m=10000 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 0.000 | 50.000 | 0.010 | 0.002 | 0.068 | 0.000 | 0.004 | 0.000 |
+| 0.000 | 100.000 | 0.000 | 0.002 | 0.000 | 0.000 | 0.000 | 0.002 |
+| 0.000 | 500.000 | 0.004 | 0.002 | 0.002 | 0.000 | 0.000 | 0.002 |
+| 0.000 | 5000.000 | 0.002 | 0.002 | 0.004 | 0.000 | 0.000 | 0.006 |
+| 0.250 | 50.000 | 0.352 | 0.610 | 0.990 | 0.028 | 0.138 | 0.180 |
+| 0.250 | 100.000 | 0.486 | 0.826 | 0.992 | 0.048 | 0.358 | 0.226 |
+| 0.250 | 500.000 | 0.604 | 0.996 | 1.000 | 0.120 | 0.718 | 1.000 |
+| 0.250 | 5000.000 | 0.618 | 0.998 | 1.000 | 0.142 | 0.932 | 1.000 |
+| 0.500 | 50.000 | 0.698 | 0.830 | 0.920 | 0.080 | 0.138 | 0.166 |
+| 0.500 | 100.000 | 0.854 | 1.000 | 1.000 | 0.138 | 0.412 | 0.670 |
+| 0.500 | 500.000 | 0.988 | 1.000 | 1.000 | 0.396 | 0.996 | 1.000 |
+| 0.500 | 5000.000 | 0.994 | 1.000 | 1.000 | 0.614 | 1.000 | 1.000 |
+
+: **Table S16** Rejection rate of the guard (level 0.01) on binormal scores (class separation 2 s.d., development prevalence 0.05) when every batch is a fresh sample. score_shift = 0 is pure label shift (rate = size); score_shift > 0 displaces all deployment scores by that many s.d. (rate = power). 500 batches per cell over 10 validation draws
+
+
+# S17 Dataset screening
+
+| Dataset | OpenML id | Decision |
+|---|---:|---:|
+| adult | 1,590 | included |
+| bank-marketing | 1,461 | included |
+| creditcard | 1,597 | included |
+| default-of-credit-card-clients | 42,477 | included |
+| APSFailure | 41,138 | included |
+| KDDCup09_appetency | 1,111 | included |
+| KDDCup09_churn | 1,112 | included |
+| KDDCup09_upselling | 1,114 | included |
+| Click_prediction_small | 1,220 | included |
+| nomao | 1,486 | included |
+| MiniBooNE | 41,150 | included |
+| jm1 | 1,053 | included |
+| Amazon_employee_access | 4,135 | included |
+| kick | 41,162 | included |
+| Diabetes130US | 4,541 | included (binarised: readmission < 30 days) |
+| online_shoppers | 45,060 | included |
+| porto-seguro | 42,742 | included |
+| Census-Income-KDD | 42,750 | included |
+| MagicTelescope | 1,120 | excluded: minority prevalence 35 % |
+| eeg-eye-state | 1,471 | excluded: minority prevalence 45 % |
+| electricity | 151 | excluded: minority prevalence 42 % (used in the temporal suite) |
+| PhishingWebsites | 4,534 | excluded: minority prevalence 44 % |
+| airlines | 1,169 | excluded: minority prevalence 45 % |
+| higgs | 23,512 | excluded: minority prevalence 47 % |
+| numerai28.6 | 23,517 | excluded: minority prevalence 49 % |
+| mammography | 310 | excluded: 260 minority instances |
+| road-safety | 42,803 | excluded: target not binary |
+| data id 45557 | 45,557 | excluded: fewer than 10,000 instances |
+| SantanderCustomerSatisfaction | 42,395 | eligible by description but download failed repeatedly; not included |
+
+: **Table S17** OpenML datasets screened against the inclusion criteria (binary target, at least 10,000 instances, at least 400 minority instances, minority prevalence at most 30 %)
 
 
 ![**Fig. S1** Latency of the decision rules as a function of batch size (one CPU thread)](../figures/fig9_efficiency.png){width=3.5in}

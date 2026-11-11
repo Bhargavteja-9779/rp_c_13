@@ -1,0 +1,21 @@
+[real-train] kdd99_time lgbm s1 2s
+[real-train] kdd99_time lgbm s0 2s
+[real-train] kdd99_time lgbm s2 2s
+[real-train] kdd99_time lgbm s3 2s
+[real-train] kdd99_time lgbm s4 1s
+[real-train] kdd99_time xgb s1 3s
+[real-train] kdd99_time xgb s0 3s
+[real-train] kdd99_time xgb s2 4s
+[real-train] kdd99_time xgb s3 2s
+[real-train] kdd99_time logreg s0 0s
+[real-train] kdd99_time xgb s4 2s
+[real-train] kdd99_time logreg s1 0s
+[real-train] kdd99_time logreg s2 0s
+[real-train] kdd99_time logreg s3 0s
+[real-train] kdd99_time logreg s4 0s
+[real-train] kdd99_time mlp s3 11s
+[real-train] kdd99_time mlp s1 14s
+[real-train] kdd99_time mlp s2 14s
+[real-train] kdd99_time mlp s0 23s
+[real-train] kdd99_time mlp s4 7s
+[real] done

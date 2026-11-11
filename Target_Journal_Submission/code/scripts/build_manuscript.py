@@ -97,10 +97,15 @@ def build(root):
              acs_loss_ci=ci(g9(A, "static", "ci95_lo"), g9(A, "static", "ci95_hi")), acs_oraclegain=s3(t9.loc["Oracle-π", A] - t9.loc["Static-F", A]), acs_mae=f"{t9c.loc[A, 'MAE_pi_hat']:.2f}",
              elec_loss=f3(abs(g9(E, "static", "mean_diff"))), elec_oraclepi=f3(t9.loc["Oracle-π", E]), elec_static=f3(t9.loc["Static-F", E]), elec_oraclethr=f3(t9.loc["Oracle-threshold", E]),
              bank_gain=s3(g9(Bk, "static", "mean_diff")), bank_auc=f"{t9c.loc[Bk, 'auc']:.2f}", bank_pimax=f"{t9c.loc[Bk, 'pi_max']:.2f}", real_fire_min=f"{100*t9c.guard_fire_rate.min():.0f}")
+    K = "kdd99_time"
+    P.update(kdd_pimin=f"{t9c.loc[K, 'pi_min']:.2f}", kdd_pimax=f"{t9c.loc[K, 'pi_max']:.2f}", kdd_auc=f"{t9c.loc[K, 'auc']:.3f}", kdd_paft=f3(t9.loc["PAFT-Bayes", K]), kdd_static=f3(t9.loc["Static-F", K]),
+             kdd_loss=s3(g9(K, "static", "mean_diff")), kdd_loss_p=f"{g9(K, 'static', 'p_wilcoxon'):.3f}", kdd_loss_holm=f"{g9(K, 'static', 'p_holm'):.2f}", kdd_oraclepi=f3(t9.loc["Oracle-π", K]),
+             gsim_share=f"{100*S['guard_sim']['share_cells_le_nominal']:.0f}", gsim_max=f"{100*S['guard_sim']['max_fire_h0']:.1f}", gsim_power=f"{100*S['guard_sim']['min_power_shift05_n500']:.1f}")
     gl = lambda su, nl, bl, c: t12b[(t12b.suite == su) & (t12b.n_lab == nl) & (t12b.baseline == bl)][c].iloc[0]
     P.update(lab_acs50=s3(gl(A, 50, "static", "mean_diff")), lab_acs50_ci=ci(gl(A, 50, "static", "ci95_lo"), gl(A, 50, "static", "ci95_hi")), lab_acs50_retune=s3(gl(A, 50, "retune_labels", "mean_diff")),
              lab_acs1000_retune=s3(gl(A, 1000, "retune_labels", "mean_diff")), lab_ctl50=s3(gl("controlled", 50, "static", "mean_diff")), lab_cc200_retune=s3(gl("creditcard_time", 200, "retune_labels", "mean_diff")),
              lab_elec_retune=f3(t12.loc[(E, 50), "Re-tune on labels"]))
+    P.update(lab_kdd50=s3(gl(K, 50, "static", "mean_diff")), lab_kdd50_p=f"{gl(K, 50, 'static', 'p_holm'):.3f}")
     ge = lambda comp, m_: t11[(t11.component.str.startswith(comp)) & (t11.m == m_)].ms.iloc[0]
     P.update(eff_paft_2000=f"{ge('PAFT-Bayes', 2000):.2f}", eff_paft_100000=f"{ge('PAFT-Bayes', 100000):.1f}", eff_guard_2000=f"{ge('PAFT guard', 2000):.2f}", eff_guard_100000=f"{ge('PAFT guard', 100000):.1f}",
              eff_dta_2000=f"{ge('DTA-EM', 2000):.2f}", eff_dta_100000=f"{ge('DTA-EM', 100000):.1f}", eff_mem=f"{t11[t11.component.str.startswith('stored')].peak_mb.iloc[0]:.1f}",
@@ -123,7 +128,7 @@ def build(root):
         ["Esposito et al. [⟦c:esposito2021⟧]", "Static threshold tuning", "No", "No (kappa)", "–", "–"],
         ["Godau et al. [⟦c:godau2025⟧]", "Re-calibration + Bayes rule", "Assumed known / external", "No (expected cost)", "No", "Simulated (images)"],
         ["Alsulaimawi [⟦c:alsulaimawi2026⟧]", "Online Bayes threshold", "Estimated online", "No (cost-sensitive)", "No", "Simulated"],
-        ["This work", "Threshold from ROC surface", "Estimated, with posterior", "Yes (F~β~, MCC)", "Yes", "Simulated and five real suites"],
+        ["This work", "Threshold from ROC surface", "Estimated, with posterior", "Yes (F~β~, MCC)", "Yes", "Simulated and six real suites"],
     ], columns=["Work", "Decision mechanism", "Deployment prevalence", "F-optimal under shift", "Validity check", "Shift in evaluation"])
     TB["gap"] = md_table(gap, "Position of this work relative to the closest prior work", index=False)
     d1 = t1.rename(columns={"n": "Instances", "features": "Features", "prevalence_%": "Prevalence (%)", "duplicate_rows": "Duplicate rows", "AUC_mean": "AUC", "AP_mean": "AP"})[["Instances", "Features", "Prevalence (%)", "Duplicate rows", "AUC", "AP"]]
@@ -146,16 +151,16 @@ def build(root):
     d7 = t7.rename(columns={"clean (m=2000)": "Clean", "calib_platt": "Platt calibration", "noise_0.1": "Noise 0.1", "noise_0.25": "Noise 0.25", "noise_0.5": "Noise 0.5", "valfrac_0.1": "10% validation", "valfrac_0.25": "25% validation"}); d7.index.name = "Rule"
     TB["robust"] = md_table(d7[["Clean", "25% validation", "10% validation", "Platt calibration", "Noise 0.1", "Noise 0.25", "Noise 0.5"]], "Robustness: mean F1 under shift (LightGBM, m = 2,000, ρ ≠ 1)",
                             note="Noise columns add Gaussian feature noise (in units of each feature's standard deviation) to deployment data, which violates the label-shift assumption.")
-    d13 = t13[["controlled_F1_shifted", "controlled_F1_noshift", "fire_rate_m500", "fire_rate_m2000", "fire_rate_m10000", "real_acs_income_states", "real_electricity_time"]].copy()
-    d13.columns = ["F1 shifted", "F1 no shift", "Fire rate m=500", "Fire rate m=2,000", "Fire rate m=10,000", "F1 ACS", "F1 electricity"]; d13.index = [f"{a_:g}" for a_ in d13.index]; d13.index.name = "α_g"
-    TB["guard"] = md_table(d13, "Sensitivity of PAFT-Guard to the guard level (controlled benchmark and two real suites)", note="Fire rates are fractions of batches under pure label shift on which the guard rejects.")
+    d13 = t13[["controlled_F1_shifted", "controlled_F1_noshift", "fire_rate_m500", "fire_rate_m2000", "fire_rate_m10000", "real_acs_income_states", "real_electricity_time", "real_kdd99_time"]].copy()
+    d13.columns = ["F1 shifted", "F1 no shift", "Fire rate m=500", "Fire rate m=2,000", "Fire rate m=10,000", "F1 ACS", "F1 electricity", "F1 KDD99"]; d13.index = [f"{a_:g}" for a_ in d13.index]; d13.index.name = "α_g"
+    TB["guard"] = md_table(d13, "Sensitivity of PAFT-Guard to the guard level (controlled benchmark and three real suites)", note="Fire rates are fractions of batches under pure label shift on which the guard rejects.")
     d9c = t9c.copy(); d9c["m"] = d9c.m_min.astype(int).map("{:,}".format) + "–" + d9c.m_max.astype(int).map("{:,}".format)
     d9c = d9c.rename(columns={"batches": "Batches", "pi0": "π0 (dev.)", "pi_min": "π min", "pi_max": "π max", "auc": "AUC (deploy.)", "MAE_pi_hat": "MAE of π̂", "guard_fire_rate": "Guard fire rate"})[["Batches", "m", "π0 (dev.)", "π min", "π max", "AUC (deploy.)", "MAE of π̂", "Guard fire rate"]]
     d9c.index.name = "Suite"; d9c["Batches"] = d9c["Batches"].astype(int)
     TB["realinfo"] = md_table(d9c, "Real-shift suites (LightGBM, means over five seeds)", fmt={"π0 (dev.)": "{:.4f}", "π min": "{:.4f}", "π max": "{:.4f}", "MAE of π̂": "{:.4f}", "Guard fire rate": "{:.2f}"},
                               note="AUC is the mean per-batch area under the ROC curve on deployment data; MAE of π̂ is the mean absolute error of the PAFT posterior-mean prevalence.")
     d9 = t9.drop(index=["PAFT-Seq (exploratory)"]).rename(columns=lambda c: c.replace("_", "-")); d9.index.name = "Rule"
-    TB["real"] = md_table(d9[["acs-income-states", "bank-time", "creditcard-time", "electricity-time", "elliptic-time"]], "Mean F1 over deployment batches on the real-shift suites (LightGBM, five seeds)",
+    TB["real"] = md_table(d9[["acs-income-states", "bank-time", "creditcard-time", "electricity-time", "elliptic-time", "kdd99-time"]], "Mean F1 over deployment batches on the real-shift suites (LightGBM, five seeds)",
                           note="Bank-time values reflect a classifier with deployment AUC of about 0.5 and are not evidence of useful adaptation (see text).")
     d12 = t12.reset_index(); d12 = d12[d12.n_lab.isin([50, 200])].rename(columns={"suite": "Suite", "n_lab": "Labels"}); d12["Suite"] = d12["Suite"].str.replace("_", "-")
     TB["labelled"] = md_table(d12, "Label-assisted adaptation: mean F1 on the unlabelled remainder of each batch when n_L instances are labelled (LightGBM)", index=False,
@@ -238,7 +243,7 @@ def supplementary(root):
              "**Pre-processing.** Categorical features are ordinal-encoded for tree models and frequency-encoded for the linear and neural models; the latter also receive median imputation and standardisation. All statistics are fitted on the training split.\n\n"
              "**Decision layer.** Candidate thresholds: validation scores of each class, thinned to at most 1,024 class-wise quantiles. Histogram: B = min(32, max(8, ⌊n1/10⌋)) class-balanced quantile bins, Laplace smoothing 0.5. Prevalence grid: 161 points uniform in logit(π0) ± 9. Prior: σ = 2. Guard level: 0.01. "
              "EM baseline: at most 200 iterations, tolerance 1e-7, on isotonic-calibrated posteriors.\n\n"
-             "**Random seeds.** Splits and learners use seeds 0–4. Deployment batches use a generator seeded by a CRC-32 hash of (dataset, model, seed, condition, metric, ρ, m), so every result is exactly reproducible; a complete re-run of the main experiment reproduced all 90,720 result rows with zero difference.\n\n"
+             "**Random seeds.** Splits and learners use seeds 0–4. Static-Bag thresholds are computed on candidate thresholds thinned to 512 quantiles per class. Deployment batches use a generator seeded by a CRC-32 hash of (dataset, model, seed, condition, metric, ρ, m), so every result is exactly reproducible; a complete re-run of the main experiment reproduced all 90,720 result rows with zero difference.\n\n"
              "**Hardware and software.** 4 CPU cores, 15 GB RAM, no GPU; Python 3.13, scikit-learn 1.9.1, LightGBM 4.7.0, XGBoost 3.4.1, PyTorch 2.15.0 (CPU). The device (CPU, CUDA or Apple MPS) is detected automatically.\n"]
     def add(title, df, cap, index=True, fmt=None):
         parts.append(f"\n# {title}\n\n" + md_table(df, cap, index=index, fmt=fmt))
@@ -261,6 +266,16 @@ def supplementary(root):
     add("S13 (continued)", T("table12b_labelled_stats").drop(columns=["reference", "median_diff"]), "**Table S13b** Paired tests of guarded PAFT-L", index=False, fmt={"p_wilcoxon": "{:.4f}", "p_holm": "{:.4f}", "mean_diff": "{:+.4f}", "ci95_lo": "{:+.4f}", "ci95_hi": "{:+.4f}"})
     add("S14 Per-dataset results", T("tableS_per_dataset_shifted", index_col=0), "**Table S14** Mean F1 under shift per dataset (LightGBM)")
     add("S15 Full efficiency measurements", T("table11_efficiency"), "**Table S15** All latency and memory measurements", index=False, fmt={"ms": "{:.3f}", "peak_mb": "{:.2f}"})
+    add("S16 Guard calibration on synthetic scores (Experiment 10)", T("table14_guard_calibration"), "**Table S16** Rejection rate of the guard (level 0.01) on binormal scores (class separation 2 s.d., development prevalence 0.05) when every batch is a fresh sample. score_shift = 0 is pure label shift (rate = size); score_shift > 0 displaces all deployment scores by that many s.d. (rate = power). 500 batches per cell over 10 validation draws", index=False)
+    scr = pd.DataFrame([("adult", 1590, "included"), ("bank-marketing", 1461, "included"), ("creditcard", 1597, "included"), ("default-of-credit-card-clients", 42477, "included"), ("APSFailure", 41138, "included"),
+                        ("KDDCup09_appetency", 1111, "included"), ("KDDCup09_churn", 1112, "included"), ("KDDCup09_upselling", 1114, "included"), ("Click_prediction_small", 1220, "included"), ("nomao", 1486, "included"),
+                        ("MiniBooNE", 41150, "included"), ("jm1", 1053, "included"), ("Amazon_employee_access", 4135, "included"), ("kick", 41162, "included"), ("Diabetes130US", 4541, "included (binarised: readmission < 30 days)"),
+                        ("online_shoppers", 45060, "included"), ("porto-seguro", 42742, "included"), ("Census-Income-KDD", 42750, "included"),
+                        ("MagicTelescope", 1120, "excluded: minority prevalence 35 %"), ("eeg-eye-state", 1471, "excluded: minority prevalence 45 %"), ("electricity", 151, "excluded: minority prevalence 42 % (used in the temporal suite)"),
+                        ("PhishingWebsites", 4534, "excluded: minority prevalence 44 %"), ("airlines", 1169, "excluded: minority prevalence 45 %"), ("higgs", 23512, "excluded: minority prevalence 47 %"),
+                        ("numerai28.6", 23517, "excluded: minority prevalence 49 %"), ("mammography", 310, "excluded: 260 minority instances"), ("road-safety", 42803, "excluded: target not binary"),
+                        ("data id 45557", 45557, "excluded: fewer than 10,000 instances"), ("SantanderCustomerSatisfaction", 42395, "eligible by description but download failed repeatedly; not included")], columns=["Dataset", "OpenML id", "Decision"])
+    add("S17 Dataset screening", scr, "**Table S17** OpenML datasets screened against the inclusion criteria (binary target, at least 10,000 instances, at least 400 minority instances, minority prevalence at most 30 %)", index=False)
     parts.append("\n![**Fig. S1** Latency of the decision rules as a function of batch size (one CPU thread)](../figures/fig9_efficiency.png){width=3.5in}\n")
     p = os.path.join(root, "supplementary", "Supplementary_Information.md"); os.makedirs(os.path.dirname(p), exist_ok=True)
     open(p, "w", encoding="utf8").write("\n".join(parts)); return p

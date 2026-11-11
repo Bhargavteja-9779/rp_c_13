@@ -15,6 +15,6 @@ controlled:
   noise_levels: [0.1, 0.25, 0.5]    # label-shift violation: Gaussian feature noise in units of feature SD
   val_fractions: [0.1, 0.25]        # robustness to small validation sets
 real:
-  suites: [bank_time, creditcard_time, electricity_time, elliptic_time, acs_income_states]
+  suites: [bank_time, creditcard_time, electricity_time, elliptic_time, acs_income_states, kdd99_time]
 method: {prior_sd: 2.0, guard_alpha: 0.01, n_grid: 161, calibrator: isotonic}
 n_jobs: 4

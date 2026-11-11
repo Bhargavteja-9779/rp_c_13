@@ -222,6 +222,14 @@ def main(root):
         save(ga, "table13_guard_alpha", T)
         fr = b.assign(fire=b.guard_p < 0.01).groupby("dataset")["fire"].mean().sort_values(); save(fr.to_frame("guard_fire_rate_under_pure_label_shift"), "tableS_guard_fire_by_dataset", T)
 
+
+    gc = os.path.join(R, "guard_calibration", "guard_calibration.csv")
+    if os.path.exists(gc):
+        g_ = pd.read_csv(gc); gt = g_.pivot_table(index=["score_shift", "n1_val"], columns=["rho", "m"], values="fire_rate")
+        gt.columns = [f"rho={a:g}, m={int(b)}" for a, b in gt.columns]; save(gt.reset_index(), "table14_guard_calibration", T, index=False)
+        h0 = g_[g_.score_shift == 0]; S["guard_sim"] = dict(max_fire_h0=float(h0.fire_rate.max()), median_fire_h0=float(h0.fire_rate.median()), share_cells_le_nominal=float((h0.fire_rate <= 0.01).mean()),
+                                                           min_power_shift05_n500=float(g_[(g_.score_shift == 0.5) & (g_.n1_val >= 500) & (g_.m >= 2000)].fire_rate.min()))
+
     # ---- efficiency ------------------------------------------------------------------------------------------------
     ep = os.path.join(R, "efficiency", "efficiency.csv")
     if os.path.exists(ep):

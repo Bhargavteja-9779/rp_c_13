@@ -93,5 +93,26 @@ def acs_income_states():
     return Xd, yd, batches
 
 
-SUITES = dict(bank_time=bank_time, creditcard_time=creditcard_time, electricity_time=electricity_time,
+def kdd99_time():
+    """KDD Cup 1999 network-intrusion data (10 % subset, 494,021 connections in capture order).
+    Positive = any attack. Dev = first 15 % of connections; then batches of 10,000 connections
+    (batches containing a single class are skipped because F1 is then degenerate).
+    Added after the first review round as a domain in which the class causes the features."""
+    import warnings
+    from sklearn.datasets import fetch_kddcup99
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        d = fetch_kddcup99(percent10=True, as_frame=True, data_home=os.path.join(RAW, "kdd99"), shuffle=False)
+    y = (d.target.astype(str).str.strip("b'.") != "normal").astype(int).to_numpy()
+    X = d.data.copy()
+    for c in ["protocol_type", "service", "flag"]:
+        X[c] = X[c].astype(str)
+    for c in X.columns:
+        if c not in ("protocol_type", "service", "flag"):
+            X[c] = pd.to_numeric(X[c])
+    n = int(0.15 * len(y))
+    return X.iloc[:n].reset_index(drop=True), y[:n], _chunks(X.iloc[n:], y[n:], 10000, "b")
+
+
+SUITES = dict(kdd99_time=kdd99_time, bank_time=bank_time, creditcard_time=creditcard_time, electricity_time=electricity_time,
               elliptic_time=elliptic_time, acs_income_states=acs_income_states)

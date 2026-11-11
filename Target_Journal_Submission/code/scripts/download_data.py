@@ -27,6 +27,9 @@ def main(cfg_path):
     for su in cfg["real"]["suites"]:
         for name, url in FILES.get(su, []):
             get(name, url)
+    if 'kdd99_time' in cfg['real']['suites']:
+        from src.data.real_suites import kdd99_time
+        kdd99_time(); print('kdd99 ok', flush=True)
     from src.data import openml_suite
     need = set(cfg["controlled"]["datasets"]) | ({"creditcard"} if "creditcard_time" in cfg["real"]["suites"] else set()) | ({"electricity"} if "electricity_time" in cfg["real"]["suites"] else set())
     for d in sorted(need):

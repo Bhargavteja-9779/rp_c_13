@@ -4,7 +4,7 @@ title: "Prevalence-adaptive F-measure thresholding for imbalanced tabular classi
 
 **Abstract**
 
-Classifiers for imbalanced problems are deployed with a decision threshold tuned for the F-measure on validation data. That threshold is optimal only for the validation prevalence, yet prevalence drifts after deployment. We characterise the F~β~-optimal threshold under prior-probability (label) shift and propose PAFT, a model-agnostic decision layer that infers the deployment prevalence from unlabelled scores with a mixture likelihood and a weak prior, selects the threshold maximising the posterior-expected metric on a validation-derived surface, and applies a goodness-of-fit guard that reverts to the static threshold when the label-shift assumption is rejected. We compare it with seven baselines on 18 public tabular datasets (five seeds, four base learners, 226,800 simulated deployment batches) and on five real temporal or cross-site shifts. Under controlled label shift PAFT improves mean F1 over the static threshold on all 18 datasets (+0.036, 95% CI +0.027 to +0.045; Holm-adjusted *p* < 0.001) and is statistically indistinguishable from the strongest existing rule, expected-F maximisation on EM-corrected posteriors (−0.001; *p* = 0.099), while also covering metrics which that rule does not. On the real shifts, label-free adaptation by any method gives no reliable gain and significantly lowers F1 on two suites because prevalence estimation breaks; the guard detects this and restores static performance. Prevalence-adaptive thresholding is therefore effective when label shift holds and should be guarded otherwise. A small labelled audit sample used only to estimate prevalence recovers part of the gain where prevalence, rather than concept, has changed.
+Classifiers for imbalanced problems are deployed with a decision threshold tuned for the F-measure on validation data. That threshold is optimal only for the validation prevalence, yet prevalence drifts after deployment. We characterise the F~β~-optimal threshold under prior-probability (label) shift and propose PAFT, a model-agnostic decision layer that infers the deployment prevalence from unlabelled scores with a mixture likelihood and a weak prior, selects the threshold maximising the posterior-expected metric on a validation-derived surface, and applies a goodness-of-fit guard that reverts to the static threshold when the label-shift assumption is rejected. We compare it with seven baselines on 18 public tabular datasets (four base learners, 226,800 simulated deployment batches) and on six real temporal or cross-site shifts. Under controlled label shift PAFT improves mean F1 over the static threshold on all 18 datasets (+0.036, 95% CI +0.027 to +0.045; Holm-adjusted *p* < 0.001) and is statistically indistinguishable from the strongest existing rule, expected-F maximisation on EM-corrected posteriors (−0.001; *p* = 0.099), while also covering metrics which that rule does not. On the real shifts, label-free adaptation by any method gives no reliable gain and significantly lowers F1 on two suites because prevalence estimation breaks; the guard detects this and restores static performance. Prevalence-adaptive thresholding is thus effective when label shift holds and should be guarded otherwise. A small labelled audit sample used only to estimate prevalence helped on one real suite and harmed on another; when the concept has changed, labels are better spent on re-tuning the threshold.
 
 **Keywords** Class imbalance · Decision threshold · F-measure · Label shift · Quantification · Dataset shift
 
@@ -21,7 +21,7 @@ This paper answers these questions with a formal characterisation, a method, and
 1. **Characterisation.** We express any confusion-matrix metric at deployment prevalence π as a closed-form function of π and the validation ROC curve, generalise the F1 optimality condition of Lipton et al. [4] to F~β~ under a shifted prior, and show that the common practice of applying a fixed, validation-tuned threshold to prior-corrected posteriors is biased in a predictable direction (Section 3).
 2. **Method.** We propose PAFT (prevalence-adaptive F-measure thresholding), a decision layer that needs only validation scores: a mixture-likelihood posterior over the deployment prevalence, a Bayes threshold that maximises the posterior-expected metric, and a goodness-of-fit guard that falls back to the static threshold when the label-shift model does not fit the batch (Section 4). It is inductive (it outputs a threshold on the score), calibration-free, and applies to F~β~ and the Matthews correlation coefficient alike.
 3. **Evidence under controlled shift.** On 18 datasets, four base learners and 226,800 batches, we quantify the loss of static thresholds and compare eight label-free rules with dataset-level paired tests. Adaptive rules recover most of the oracle gap; PAFT matches, but does not exceed, expected-F maximisation on EM-corrected posteriors (Section 6).
-4. **Evidence under real shift, including negative results.** On five temporal or cross-site suites, no label-free rule helps reliably and several hurt. We trace the failure to prevalence estimation rather than to the threshold map, show that the guard prevents the harm, and evaluate a label-assisted variant that spends a small audit sample on prevalence only (Sections 6.6–6.7).
+4. **Evidence under real shift, including negative results.** On six temporal or cross-site suites, no label-free rule helps reliably and several hurt. We separate failures of prevalence estimation from failures of the threshold map, show that the guard prevents the harm, and evaluate a label-assisted variant that spends a small audit sample on prevalence only, which helps on one suite and harms on another (Sections 6.6–6.7).
 
 We state plainly what the paper does not claim: PAFT is not more accurate than the best existing transductive rule under label shift, and unguarded prevalence adaptation is not safe on real tabular drift. The value of the work lies in the characterisation, the guard, and an evaluation that separates the regime where prevalence adaptation works from the regime where it does not.
 
@@ -48,7 +48,7 @@ We state plainly what the paper does not claim: PAFT is not more accurate than t
 | Esposito et al. [6] | Static threshold tuning | No | No (kappa) | – | – |
 | Godau et al. [12] | Re-calibration + Bayes rule | Assumed known / external | No (expected cost) | No | Simulated (images) |
 | Alsulaimawi [37] | Online Bayes threshold | Estimated online | No (cost-sensitive) | No | Simulated |
-| This work | Threshold from ROC surface | Estimated, with posterior | Yes (F~β~, MCC) | Yes | Simulated and five real suites |
+| This work | Threshold from ROC surface | Estimated, with posterior | Yes (F~β~, MCC) | Yes | Simulated and six real suites |
 
 : **Table 1** Position of this work relative to the closest prior work
 
@@ -101,7 +101,7 @@ PAFT has a development stage, executed once on the labelled validation split, an
 
 ## 4.1 Development stage
 
-From the validation scores we compute (i) the empirical ROC functions $\hat G_1,\hat G_0$ on a set of $T$ candidate thresholds, consisting of the validation scores of both classes, each class thinned to at most 1,024 quantiles so that the minority-class tail is resolved; (ii) class-conditional histograms $\hat h_1,\hat h_0$ of the score on $B$ bins whose edges are class-balanced quantiles, with $B=\min(32,\max(8,\lfloor n_1/10\rfloor))$ for $n_1$ validation positives and Laplace smoothing of 0.5 per bin; and (iii) the metric surface $M(t_j;\pi_g)$ on the $T$ thresholds and a grid of $G=161$ prevalences that is uniform on the logit scale and centred on $\pi_0$ (±9 logits). The static threshold $t_0$ is the maximiser of the row $\pi_g=\pi_0$, which coincides with the usual empirical F-maximising threshold on the validation split.
+From the validation scores we compute (i) the empirical ROC functions $\hat G_1,\hat G_0$ on a set of $T$ candidate thresholds, consisting of the validation scores of both classes, each class thinned to at most 1,024 quantiles so that the minority-class tail is resolved; (ii) class-conditional histograms $\hat h_1,\hat h_0$ of the score on $B$ bins whose edges are class-balanced quantiles, with $B=\min(32,\max(8,\lfloor n_1/10\rfloor))$ for $n_1$ validation positives and Laplace smoothing of 0.5 per bin; and (iii) the metric surface $M(t_j;\pi_g)$ on the $T$ thresholds and a grid of $G=161$ prevalences that is uniform on the logit scale and centred on $\pi_0$ (±9 logits). The static threshold $t_0$ is the maximiser of the row $\pi_g=\pi_0$, which coincides with the usual empirical F-maximising threshold on the validation split. More generally, maximising a row of the surface is equivalent to tuning the threshold on the validation split after re-weighting positives by $\pi/\pi_0$ and negatives by $(1-\pi)/(1-\pi_0)$; the surface is simply the pre-computed form of this importance-weighted re-tuning for all prevalences at once.
 
 ## 4.2 Posterior over the deployment prevalence
 
@@ -147,7 +147,7 @@ RQ1: How much F1 does a static threshold lose under prevalence shift, and how mu
 
 ## 5.2 Controlled-shift benchmark
 
-**Datasets.** We use every dataset we identified on OpenML [43] that met criteria fixed in advance: a binary target (or a standard binarisation), at least 10,000 instances, at least 400 minority instances and a minority prevalence of at most 30%. This gives 18 datasets from fraud, churn, marketing, credit, industrial failure, physics and census domains (Table 2), with prevalences from 0.17% to 28.6%; the minority class is always the positive class. Among them are the credit-card fraud data of Dal Pozzolo et al. [22], bank marketing [44] and 30-day readmission [45].
+**Datasets.** We use every dataset we identified on OpenML [43] that met criteria fixed in advance: a binary target (or a standard binarisation), at least 10,000 instances, at least 400 minority instances and a minority prevalence of at most 30%. We screened 30 widely used OpenML datasets against these criteria (Supplementary Table S17); one further eligible candidate could not be downloaded and is therefore missing. This gives 18 datasets from fraud, churn, marketing, credit, industrial failure, physics and census domains (Table 2), with prevalences from 0.17% to 28.6%; the minority class is always the positive class. Among them are the credit-card fraud data of Dal Pozzolo et al. [22], bank marketing [44] and 30-day readmission [45].
 
 | Dataset | Instances | Features | Prevalence (%) | Duplicate rows | AUC | AP |
 |---|---:|---:|---:|---:|---:|---:|
@@ -183,7 +183,7 @@ RQ1: How much F1 does a static threshold lose under prevalence shift, and how mu
 
 ## 5.3 Real-shift suites
 
-Five suites use naturally ordered or naturally partitioned data; nothing from a deployment batch is used for fitting (Table 3). *Bank-time*: the chronologically ordered bank telemarketing data [44] without the leaking call-duration feature; the first half is development data, followed by batches of 2,000 calls. *Creditcard-time*: the fraud transactions in time order, first half for development, then batches of 10,000. *Electricity-time*: the Elec2 price-direction stream [40], first 30% for development, then three-week batches. *Elliptic-time*: labelled Bitcoin transactions [50] with the customary split at time step 34 and one batch per later step. *ACS-income-states*: the ACSIncome task [51] on the 2018 one-year survey, developed on California and deployed on each of the other 49 states and Puerto Rico. Development data are split 5:2 into training and validation as above.
+Six suites use naturally ordered or naturally partitioned data; nothing from a deployment batch is used for fitting (Table 3). *Bank-time*: the chronologically ordered bank telemarketing data [44] without the leaking call-duration feature; the first half is development data, followed by batches of 2,000 calls. *Creditcard-time*: the fraud transactions in time order, first half for development, then batches of 10,000. *Electricity-time*: the Elec2 price-direction stream [40], first 30% for development, then three-week batches. *Elliptic-time*: labelled Bitcoin transactions [50] with the customary split at time step 34 and one batch per later step. *ACS-income-states*: the ACSIncome task [51] on the 2018 one-year survey, developed on California and deployed on each of the other 49 states and Puerto Rico. *KDD99-time*: the KDD Cup 1999 network-intrusion data (10% subset, 494,021 connections in capture order, as distributed with scikit-learn), with any attack as the positive class; the first 15% of connections are development data, followed by batches of 10,000 connections, of which those containing a single class are skipped. This suite was added after the first internal review round, with its split fixed before any result was computed, because intrusion detection is a domain in which the class plausibly causes the features. Development data are split 5:2 into training and validation as above.
 
 | Suite | Batches | m | π0 (dev.) | π min | π max | AUC (deploy.) | MAE of π̂ | Guard fire rate |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -192,6 +192,7 @@ Five suites use naturally ordered or naturally partitioned data; nothing from a 
 | creditcard_time | 14 | 10,000–10,000 | 0.0019 | 0.0004 | 0.0061 | 0.910 | 0.0010 | 1.00 |
 | electricity_time | 31 | 1,008–1,008 | 0.4445 | 0.3075 | 0.5635 | 0.809 | 0.2551 | 1.00 |
 | elliptic_time | 15 | 471–2,154 | 0.1158 | 0.0028 | 0.1468 | 0.898 | 0.0216 | 1.00 |
+| kdd99_time | 14 | 10,000–10,000 | 0.4189 | 0.0319 | 0.9985 | 0.997 | 0.1400 | 1.00 |
 
 : **Table 3** Real-shift suites (LightGBM, means over five seeds)
 
@@ -213,7 +214,7 @@ Two oracles bound what is achievable: *Oracle-π* applies $t^\star(\pi)$ with th
 
 ## 5.5 Metrics and statistical analysis
 
-The primary metric is F1 on each batch; F~0.5~, F~2~ and the Matthews correlation coefficient (MCC) [54] test generality, and regret is measured against Oracle-threshold. Batch values are averaged over repetitions, batch sizes, shift levels and seeds to one value per dataset, so the unit of analysis is the dataset (n = 18) in the controlled benchmark and the deployment batch (averaged over seeds) in each real suite. We use two-sided Wilcoxon signed-rank tests [55] with Holm correction within each family of comparisons, as recommended for comparisons over multiple datasets [56], report the mean paired difference with a 10,000-resample percentile bootstrap 95% confidence interval [57] and the matched-pairs rank-biserial correlation as effect size [58], and add a Friedman test [59] with average ranks and the Nemenyi critical difference [56]. No seed or configuration was selected after seeing results; the standard deviation over seeds is reported in Supplementary Table S3.
+The primary metric is F1 on each batch; F~0.5~, F~2~ and the Matthews correlation coefficient (MCC) [54] test generality, and regret is measured against Oracle-threshold. Batch values are averaged over repetitions, batch sizes, shift levels and seeds to one value per dataset, so the unit of analysis is the dataset (n = 18) in the controlled benchmark and the deployment batch (averaged over seeds) in each real suite. Consecutive batches of a temporal suite are not independent, so the *p*-values for real suites are descriptive and we rely mainly on the direction and size of the effects there. We use two-sided Wilcoxon signed-rank tests [55] with Holm correction within each family of comparisons, as recommended for comparisons over multiple datasets [56], report the mean paired difference with a 10,000-resample percentile bootstrap 95% confidence interval [57] and the matched-pairs rank-biserial correlation as effect size [58], and add a Friedman test [59] with average ranks and the Nemenyi critical difference [56]. No seed or configuration was selected after seeing results; the standard deviation over seeds is reported in Supplementary Table S3.
 
 # 6 Results
 
@@ -324,26 +325,6 @@ Table 7 removes or replaces each component. (i) *Posterior versus point estimate
 
 **Small validation sets.** With 25% and 10% of the validation split (Table 8), PAFT-Bayes still gains +0.033 and +0.034 over Static-F, but at 10% DTA-EM is significantly better than PAFT-Bayes (−0.004, Holm-adjusted *p* = 0.021): the empirical ROC surface degrades faster than isotonic posteriors when validation positives are scarce.
 
-**Calibrator of the baselines.** Replacing isotonic by Platt-type calibration leaves DTA-EM at 0.532 against 0.534 for PAFT-Bayes (*p* = 0.35).
-
-**Violated label shift.** Adding Gaussian noise of 0.1, 0.25 and 0.5 feature standard deviations to the deployment features changes the class-conditional score distributions (Figure 6). Unguarded adaptive rules then lose their advantage: at the lowest noise level PAFT-Bayes (0.420) and DTA-EM (0.415) are no better than Static-F (0.424). PAFT-Guard, whose test fires on 62% of these batches, obtains the highest mean F1 of all label-free rules at every noise level (0.437, 0.410, 0.375), but its differences from PAFT-Bayes and Static-F are not significant at the dataset level (Supplementary Table S6), so we report this as a consistent tendency rather than an established effect.
-
-![**Fig. 6** Robustness. a Feature noise on deployment data violates label shift. b Reduced validation sets](../figures/fig6_robustness.png){width=6.3in}
-
-**Guard firing under pure label shift.** With α~g~ = 0.01 the guard fires on 7.0%, 7.4% and 10.1% of batches of size 500, 2,000 and 10,000, above the nominal level. The excess is concentrated in two datasets (Supplementary Table S5): creditcard, where it fires on every batch, and APSFailure (20%). Both have few validation and test positives (about 99 and 148 for creditcard), so that batches resampled from the small test pool differ detectably from the validation sample; on the other 16 datasets the median firing rate is 0.6%. The guard is therefore conservative for very rare classes, where it reduces to the static rule. Table 9 shows that results are insensitive to α~g~ between 0.001 and 0.05.
-
-| α_g | F1 shifted | F1 no shift | Fire rate m=500 | Fire rate m=2,000 | Fire rate m=10,000 | F1 ACS | F1 electricity |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| 0.001 | 0.531 | 0.525 | 0.067 | 0.068 | 0.078 | 0.701 | 0.450 |
-| 0.01 | 0.531 | 0.525 | 0.070 | 0.074 | 0.101 | 0.702 | 0.450 |
-| 0.05 | 0.529 | 0.526 | 0.089 | 0.104 | 0.164 | 0.702 | 0.450 |
-| 0.2 | 0.524 | 0.526 | 0.178 | 0.232 | 0.362 | 0.702 | 0.450 |
-
-: **Table 9** Sensitivity of PAFT-Guard to the guard level (controlled benchmark and two real suites)
-
-*Note.* Fire rates are fractions of batches under pure label shift on which the guard rejects.
-
-
 | Rule | Clean | 25% validation | 10% validation | Platt calibration | Noise 0.1 | Noise 0.25 | Noise 0.5 |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | Default 0.5 | 0.407 | 0.405 | 0.408 | 0.396 | 0.336 | 0.317 | 0.288 |
@@ -364,13 +345,33 @@ Table 7 removes or replaces each component. (i) *Posterior versus point estimate
 *Note.* Noise columns add Gaussian feature noise (in units of each feature's standard deviation) to deployment data, which violates the label-shift assumption.
 
 
+**Calibrator of the baselines.** Replacing isotonic by Platt-type calibration leaves DTA-EM at 0.532 against 0.534 for PAFT-Bayes (*p* = 0.35).
+
+**Violated label shift.** Adding Gaussian noise of 0.1, 0.25 and 0.5 feature standard deviations to the deployment features changes the class-conditional score distributions (Figure 6). Unguarded adaptive rules then lose their advantage: at the lowest noise level PAFT-Bayes (0.420) and DTA-EM (0.415) are no better than Static-F (0.424). PAFT-Guard, whose test fires on 62% of these batches, obtains the highest mean F1 of all label-free rules at every noise level (0.437, 0.410, 0.375), but its differences from PAFT-Bayes and Static-F are not significant at the dataset level (Supplementary Table S6), so we report this as a consistent tendency rather than an established effect.
+
+![**Fig. 6** Robustness. a Feature noise on deployment data violates label shift. b Reduced validation sets](../figures/fig6_robustness.png){width=6.3in}
+
+**Guard firing under pure label shift.** With α~g~ = 0.01 the guard fires on 7.0%, 7.4% and 10.1% of batches of size 500, 2,000 and 10,000, above the nominal level. The excess is concentrated in two datasets (Supplementary Table S5): creditcard, where it fires on every batch, and APSFailure (20%). Both have few validation and test positives (about 99 and 148 for creditcard), so that batches resampled with replacement from the small test pool reproduce that pool's sampling deviation from the validation sample in every batch; on the other 16 datasets the median firing rate is 0.6%. To separate this protocol artefact from the test itself, we simulated binormal scores in which every batch consists of fresh draws (Experiment 10, Supplementary Table S16): under label shift the firing rate was at or below the nominal 1% in 96% of the 24 combinations of validation size, batch size and prevalence (maximum 6.8%, with 50 validation positives and *m* = 10,000), and with at least 500 validation positives and *m* ≥ 2,000 a displacement of the scores by half a standard deviation was detected in at least 99.6% of batches. The test is thus conservative when deployment positives are fresh, and in our resampling protocol it makes PAFT-Guard revert to the static rule for the rarest classes. Table 9 shows that results are insensitive to α~g~ between 0.001 and 0.05.
+
+| α_g | F1 shifted | F1 no shift | Fire rate m=500 | Fire rate m=2,000 | Fire rate m=10,000 | F1 ACS | F1 electricity | F1 KDD99 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.001 | 0.531 | 0.525 | 0.067 | 0.068 | 0.078 | 0.701 | 0.450 | 0.973 |
+| 0.01 | 0.531 | 0.525 | 0.070 | 0.074 | 0.101 | 0.702 | 0.450 | 0.973 |
+| 0.05 | 0.529 | 0.526 | 0.089 | 0.104 | 0.164 | 0.702 | 0.450 | 0.973 |
+| 0.2 | 0.524 | 0.526 | 0.178 | 0.232 | 0.362 | 0.702 | 0.450 | 0.973 |
+
+: **Table 9** Sensitivity of PAFT-Guard to the guard level (controlled benchmark and three real suites)
+
+*Note.* Fire rates are fractions of batches under pure label shift on which the guard rejects.
+
+
 ## 6.5 Summary under controlled shift
 
 Under the conditions for which they are designed, prevalence-adaptive rules are clearly better than a static threshold, at a negligible cost when nothing has shifted. PAFT-Bayes and DTA-EM are equivalent in F1; PAFT is preferable when a threshold on the score is needed, when calibrated posteriors are not available, or for metrics other than F~β~, and DTA-EM is preferable when validation positives are very scarce.
 
 ## 6.6 Real shifts: label-free adaptation does not help (RQ4)
 
-Table 10 and Figure 7 report the five real suites. The picture is different from the controlled benchmark.
+Table 10 and Figure 7 report the six real suites. The picture is different from the controlled benchmark.
 
 ![**Fig. 7** Real-shift suites (LightGBM, mean over five seeds). Top: true and estimated prevalence per batch; the dotted line is the development prevalence. Bottom: F1 per batch. PAFT-Guard coincides with Static-F wherever the guard fires](../figures/fig7_real.png){width=6.3in}
 
@@ -382,22 +383,24 @@ Table 10 and Figure 7 report the five real suites. The picture is different from
 
 *Bank-time.* Adaptive rules exceed Static-F by +0.032, but this result should not be read as a success: the mean deployment AUC is 0.50, i.e. the classifier carries no information after the temporal change, the estimated prevalence is close to one, and the "gain" is that of predicting nearly everything positive as prevalence climbs to 0.52.
 
-**The guard.** On the real suites the goodness-of-fit test rejects the label-shift model on 95–100% of batches, so PAFT-Guard coincides with Static-F almost everywhere: it avoids the significant losses on ACS and electricity, and forgoes the spurious gain on bank-time. Across the five suites we found no case in which unguarded label-free adaptation was reliably beneficial for a classifier that still worked.
+*KDD99-time.* Attack prevalence ranges from 0.03 to 1.00 across batches and the classifier keeps a deployment AUC of 0.997, so this suite should favour prevalence adaptation. It does not: PAFT-Bayes reaches 0.947 against 0.973 for Static-F (difference −0.026; unadjusted *p* = 0.025, Holm-adjusted *p* = 0.12), DTA-EM behaves identically, and even Oracle-π (0.950) is below the static threshold. The mixture of attack types changes over time, so the class-conditional score distribution of the positive class is not stable and the validation threshold map is wrong.
 
-| Rule | acs-income-states | bank-time | creditcard-time | electricity-time | elliptic-time |
-|---|---:|---:|---:|---:|---:|
-| Default 0.5 | 0.714 | 0.000 | 0.645 | 0.449 | 0.483 |
-| Static-F | 0.702 | 0.233 | 0.645 | 0.450 | 0.483 |
-| Static-Bag | 0.702 | 0.234 | 0.644 | 0.451 | 0.483 |
-| EM-0.5 | 0.707 | 0.265 | 0.636 | 0.423 | 0.477 |
-| EM-Fixed | 0.692 | 0.265 | 0.551 | 0.424 | 0.478 |
-| PrevMatch | 0.708 | 0.263 | 0.635 | 0.384 | 0.481 |
-| DTA-EM | 0.692 | 0.265 | 0.633 | 0.425 | 0.484 |
-| PAFT-Plug | 0.693 | 0.265 | 0.638 | 0.426 | 0.477 |
-| PAFT-Bayes | 0.693 | 0.265 | 0.641 | 0.426 | 0.477 |
-| PAFT-Guard | 0.702 | 0.233 | 0.645 | 0.450 | 0.483 |
-| Oracle-π | 0.713 | 0.260 | 0.646 | 0.450 | 0.480 |
-| Oracle-threshold | 0.720 | 0.272 | 0.729 | 0.721 | 0.600 |
+**The guard.** On the real suites the goodness-of-fit test rejects the label-shift model on 95–100% of batches, so PAFT-Guard coincides with Static-F almost everywhere: it avoids the losses on ACS, electricity and KDD99, and forgoes the spurious gain on bank-time. Across the six suites we found no case in which unguarded label-free adaptation was reliably beneficial for a classifier that still worked.
+
+| Rule | acs-income-states | bank-time | creditcard-time | electricity-time | elliptic-time | kdd99-time |
+|---|---:|---:|---:|---:|---:|---:|
+| Default 0.5 | 0.714 | 0.000 | 0.645 | 0.449 | 0.483 | 0.973 |
+| Static-F | 0.702 | 0.233 | 0.645 | 0.450 | 0.483 | 0.973 |
+| Static-Bag | 0.702 | 0.234 | 0.644 | 0.451 | 0.483 | 0.975 |
+| EM-0.5 | 0.707 | 0.265 | 0.636 | 0.423 | 0.477 | 0.947 |
+| EM-Fixed | 0.692 | 0.265 | 0.551 | 0.424 | 0.478 | 0.960 |
+| PrevMatch | 0.708 | 0.263 | 0.635 | 0.384 | 0.481 | 0.973 |
+| DTA-EM | 0.692 | 0.265 | 0.633 | 0.425 | 0.484 | 0.947 |
+| PAFT-Plug | 0.693 | 0.265 | 0.638 | 0.426 | 0.477 | 0.947 |
+| PAFT-Bayes | 0.693 | 0.265 | 0.641 | 0.426 | 0.477 | 0.947 |
+| PAFT-Guard | 0.702 | 0.233 | 0.645 | 0.450 | 0.483 | 0.973 |
+| Oracle-π | 0.713 | 0.260 | 0.646 | 0.450 | 0.480 | 0.950 |
+| Oracle-threshold | 0.720 | 0.272 | 0.729 | 0.721 | 0.600 | 0.988 |
 
 : **Table 10** Mean F1 over deployment batches on the real-shift suites (LightGBM, five seeds)
 
@@ -408,7 +411,7 @@ Table 10 and Figure 7 report the five real suites. The picture is different from
 
 Since quantification, not the threshold map, failed on the ACS suite, we tested whether a small labelled audit sample spent on prevalence alone helps (Table 11). With 50 labels per state, guarded PAFT-L improves on Static-F by +0.009 (95% CI +0.005 to +0.013; Holm-adjusted *p* < 0.001) and on directly re-tuning the threshold on the same 50 labels by +0.019; with 1,000 labels direct re-tuning becomes better (−0.003). Under controlled label shift, 50 labels give +0.036 over Static-F, as much as the label-free rule, while re-tuning on 50 labels is worse than not adapting. On creditcard-time, PAFT-L is +0.073 better than re-tuning on 200 labels, which contain almost no positives, but not significantly better than Static-F.
 
-The variant has a clear limit. On electricity-time, re-tuning on 50 labelled instances raises F1 from 0.450 to 0.692, whereas PAFT-L stays at the static level: under concept change the threshold map itself is obsolete and labels must be spent on the decision, or on retraining, rather than on prevalence. PAFT-L is therefore useful when few labels are affordable and the change is mainly one of prevalence, and it is not a substitute for drift adaptation.
+The variant has a clear limit. On electricity-time, re-tuning on 50 labelled instances raises F1 from 0.450 to 0.692, whereas PAFT-L stays at the static level: under concept change the threshold map itself is obsolete and labels must be spent on the decision, or on retraining, rather than on prevalence. On KDD99-time, where the threshold map does not transfer, PAFT-L is worse than the static threshold (−0.022 with 50 labels; Holm-adjusted *p* = 0.001), although less so than the label-free rule. PAFT-L therefore helped on one real suite (ACS), harmed on one (KDD99) and made no reliable difference on the others; it is useful only when the change is mainly one of prevalence, which the guard alone cannot certify, and it is not a substitute for drift adaptation.
 
 | Suite | Labels | Static-F | PAFT-Bayes (no labels) | Re-tune on labels | PAFT-L (labels → π) | PAFT-L + mixture | PAFT-L guarded | Oracle-π | Oracle-threshold |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -424,6 +427,8 @@ The variant has a clear limit. On electricity-time, re-tuning on 50 labelled ins
 | electricity-time | 200 | 0.450 | 0.426 | 0.706 | 0.449 | 0.436 | 0.449 | 0.450 | 0.722 |
 | elliptic-time | 50 | 0.483 | 0.477 | 0.486 | 0.486 | 0.477 | 0.486 | 0.480 | 0.602 |
 | elliptic-time | 200 | 0.484 | 0.477 | 0.543 | 0.481 | 0.479 | 0.481 | 0.485 | 0.604 |
+| kdd99-time | 50 | 0.973 | 0.947 | 0.964 | 0.951 | 0.947 | 0.951 | 0.950 | 0.988 |
+| kdd99-time | 200 | 0.973 | 0.947 | 0.981 | 0.951 | 0.947 | 0.951 | 0.950 | 0.989 |
 
 : **Table 11** Label-assisted adaptation: mean F1 on the unlabelled remainder of each batch when n_L instances are labelled (LightGBM)
 
@@ -473,7 +478,7 @@ On one CPU thread (Table 12), PAFT-Bayes takes 0.56 ms for a batch of 2,000 scor
 
 # 7 Discussion
 
-**What should a practitioner do?** The evidence supports a simple protocol. If deployment prevalence is expected to move and the mechanism generating features from classes is stable (which is plausible when the class causes the features [60] and was true by construction in our controlled benchmark), adapt the threshold: the expected gain in F1 is a few points and the cost is negligible. Always run the guard: it is cheap, and on five real suites it was the difference between harming and not harming. If the guard fires persistently, label-free prevalence estimates should not be trusted; a few dozen labels spent on prevalence help if the classifier still ranks well, and otherwise the problem is concept drift and calls for re-tuning on labels or retraining [38, 39].
+**What should a practitioner do?** The evidence supports a simple protocol. If deployment prevalence is expected to move and the mechanism generating features from classes is stable (which is plausible when the class causes the features [60] and was true by construction in our controlled benchmark), adapt the threshold: the expected gain in F1 is a few points and the cost is negligible. Always run the guard: it is cheap, and on the real suites it was the difference between harming and not harming. If the guard fires persistently, label-free prevalence estimates should not be trusted, and keeping the static threshold was the best label-free option in our data. With labels, spending a few dozen on prevalence alone helped only where the threshold map still held (ACS); as that cannot be known in advance, re-tuning the threshold on a few hundred labelled instances, or retraining, is the safer response to a persistent alarm [38, 39].
 
 **PAFT or DTA-EM?** Our results do not support replacing the decision-theoretic rule by PAFT on grounds of F1. The two differ in kind. DTA-EM is transductive: it needs the whole batch before any instance can be decided and returns a set, not a threshold. PAFT returns a threshold on the score, which can be applied to instances as they arrive after a warm-up batch, can be logged and audited, and can be compared across batches; it requires no calibrated posteriors; and it applies unchanged to MCC or any other confusion-matrix metric. DTA-EM is more robust when validation positives number fewer than about one hundred. An equally important finding is that the decision-theoretic rule, which is rarely used as a baseline in the prior-shift literature, is very strong.
 
@@ -483,11 +488,11 @@ On one CPU thread (Table 12), PAFT-Bayes takes 0.56 ms for a batch of 2,000 scor
 
 # 8 Limitations
 
-(1) PAFT is not superior to DTA-EM in F1, and is inferior with very few validation positives. (2) The positive results rely on simulated label shift; on the five real suites label-free adaptation did not help, and we cannot point to a real dataset where it did for a working classifier. Suites in which label shift is the dominant real mechanism (for example case mix across clinical sites) were not available to us in tabular form and remain to be tested. (3) The guard's reference distribution is approximate: it fires above its nominal level, always on the rarest-class dataset, and with large batches it will reject for deviations too small to matter. (4) The controlled protocol resamples positives with replacement from pools that are small for the rarest classes, which understates batch-to-batch variability there. (5) All problems are binary and tabular; multi-class F-measures require a search over a simplex and were not studied. (6) Base learners use fixed hyper-parameters; better-tuned models would change absolute F1 but, since all rules share the scores, are unlikely to change their ordering. (7) The label-assisted variant was added after seeing the real-shift results and needs confirmation on independent data. (8) We did not study sequential dependence between batches beyond an exploratory variant (Supplementary Table S4), nor adversarial manipulation of the batch.
+(1) PAFT is not superior to DTA-EM in F1, and is inferior with very few validation positives. (2) The positive results rely on simulated label shift; on the six real suites label-free adaptation did not help, and we cannot point to a real dataset where it did for a working classifier. One suite was added after the first results were known (KDD99-time) in an attempt to find such a case, and it did not provide one. Settings in which label shift is the dominant real mechanism (for example case mix across clinical sites) remain to be tested. (3) The guard's reference distribution is approximate; in our resampling protocol it always fires on the rarest-class dataset, and with large batches it will reject for deviations too small to matter. (4) The controlled protocol resamples positives with replacement from pools that are small for the rarest classes, which understates batch-to-batch variability there. (5) All problems are binary and tabular; multi-class F-measures require a search over a simplex and were not studied. (6) Base learners use fixed hyper-parameters; better-tuned models would change absolute F1 but, since all rules share the scores, are unlikely to change their ordering. (7) The label-assisted variant was added after seeing the real-shift results, helped on only one real suite and harmed on another, and should be regarded as exploratory. (8) We did not study sequential dependence between batches beyond an exploratory variant (Supplementary Table S4), nor adversarial manipulation of the batch.
 
 # 9 Conclusion
 
-A threshold tuned for the F-measure is tuned for one prevalence. Under label shift, re-deriving it from validation ROC information and an estimated prevalence recovers most of the loss on 18 tabular datasets at negligible computational cost, and the proposed Bayes rule does so as well as, but not better than, expected-F maximisation on EM-corrected posteriors, while extending to other metrics and yielding an explicit threshold. On real temporal and cross-site shifts the label-shift assumption failed, label-free adaptation gave no reliable benefit, and a goodness-of-fit guard was needed to avoid harm. We therefore recommend guarded adaptation as a default, a small labelled audit sample for prevalence when the guard fires and the classifier still ranks well, and re-tuning or retraining otherwise.
+A threshold tuned for the F-measure is tuned for one prevalence. Under label shift, re-deriving it from validation ROC information and an estimated prevalence recovers most of the loss on 18 tabular datasets at negligible computational cost, and the proposed Bayes rule does so as well as, but not better than, expected-F maximisation on EM-corrected posteriors, while extending to other metrics and yielding an explicit threshold. On six real temporal and cross-site shifts the label-shift assumption failed, label-free adaptation gave no reliable benefit, and a goodness-of-fit guard was needed to avoid harm. We therefore recommend guarded adaptation as a default and, when the guard fires persistently, labelled re-tuning or retraining rather than further prevalence correction. Whether real deployments exist in which label shift holds well enough for unguarded adaptation to pay off is, on our evidence, an open question.
 
 # Declarations
 

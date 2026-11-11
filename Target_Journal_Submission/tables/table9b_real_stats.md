@@ -1,0 +1,27 @@
+| suite             | reference   | baseline   |   n_units |   mean_diff |   median_diff |   ci95_lo |   ci95_hi |   wins |   ties |   losses |   p_wilcoxon |   rank_biserial |   p_holm |
+|:------------------|:------------|:-----------|----------:|------------:|--------------:|----------:|----------:|-------:|-------:|---------:|-------------:|----------------:|---------:|
+| acs_income_states | paft_bayes  | static     |        50 |      -0.009 |        -0.010 |    -0.012 |    -0.007 |      3 |      3 |       44 |        0.000 |          -0.904 |    0.000 |
+| acs_income_states | paft_bayes  | dta_em     |        50 |       0.001 |         0.001 |     0.001 |     0.002 |     36 |      0 |       14 |        0.000 |           0.678 |    0.000 |
+| acs_income_states | paft_bayes  | em_fixed   |        50 |       0.001 |         0.001 |     0.000 |     0.002 |     32 |      0 |       18 |        0.004 |           0.467 |    0.007 |
+| acs_income_states | paft_bayes  | paft_guard |        50 |      -0.009 |        -0.010 |    -0.011 |    -0.006 |      3 |      4 |       43 |        0.000 |          -0.900 |    0.000 |
+| acs_income_states | paft_bayes  | paft_plug  |        50 |       0.000 |         0.000 |     0.000 |     0.000 |      9 |     39 |        2 |        0.033 |           0.727 |    0.033 |
+| bank_time         | paft_bayes  | static     |        10 |       0.032 |         0.020 |     0.014 |     0.055 |      9 |      0 |        1 |        0.006 |           0.927 |    0.029 |
+| bank_time         | paft_bayes  | dta_em     |        10 |       0.000 |         0.000 |     0.000 |     0.000 |      0 |     10 |        0 |        1.000 |           0.000 |    1.000 |
+| bank_time         | paft_bayes  | em_fixed   |        10 |       0.000 |         0.000 |     0.000 |     0.000 |      0 |     10 |        0 |        1.000 |           0.000 |    1.000 |
+| bank_time         | paft_bayes  | paft_guard |        10 |       0.032 |         0.020 |     0.014 |     0.055 |      9 |      0 |        1 |        0.006 |           0.927 |    0.029 |
+| bank_time         | paft_bayes  | paft_plug  |        10 |       0.000 |         0.000 |     0.000 |     0.000 |      0 |     10 |        0 |        1.000 |           0.000 |    1.000 |
+| creditcard_time   | paft_bayes  | static     |        14 |      -0.004 |         0.000 |    -0.018 |     0.013 |      3 |      5 |        6 |        0.260 |          -0.422 |    1.000 |
+| creditcard_time   | paft_bayes  | dta_em     |        14 |       0.007 |         0.003 |    -0.008 |     0.025 |      7 |      1 |        6 |        0.600 |           0.165 |    1.000 |
+| creditcard_time   | paft_bayes  | em_fixed   |        14 |       0.090 |         0.112 |     0.057 |     0.119 |     11 |      0 |        3 |        0.002 |           0.886 |    0.009 |
+| creditcard_time   | paft_bayes  | paft_guard |        14 |      -0.004 |         0.000 |    -0.018 |     0.013 |      3 |      5 |        6 |        0.260 |          -0.422 |    1.000 |
+| creditcard_time   | paft_bayes  | paft_plug  |        14 |       0.003 |         0.000 |    -0.005 |     0.013 |      4 |      7 |        3 |        0.735 |           0.143 |    1.000 |
+| electricity_time  | paft_bayes  | static     |        31 |      -0.024 |        -0.020 |    -0.034 |    -0.016 |      5 |      0 |       26 |        0.000 |          -0.891 |    0.000 |
+| electricity_time  | paft_bayes  | dta_em     |        31 |       0.000 |         0.000 |    -0.001 |     0.001 |     13 |     11 |        7 |        0.179 |           0.343 |    0.358 |
+| electricity_time  | paft_bayes  | em_fixed   |        31 |       0.002 |         0.001 |     0.001 |     0.002 |     18 |      6 |        7 |        0.004 |           0.668 |    0.011 |
+| electricity_time  | paft_bayes  | paft_guard |        31 |      -0.024 |        -0.020 |    -0.034 |    -0.016 |      5 |      0 |       26 |        0.000 |          -0.891 |    0.000 |
+| electricity_time  | paft_bayes  | paft_plug  |        31 |       0.000 |         0.000 |    -0.000 |     0.001 |      7 |     20 |        4 |        0.534 |           0.212 |    0.534 |
+| elliptic_time     | paft_bayes  | static     |        15 |      -0.005 |         0.000 |    -0.027 |     0.015 |      4 |      5 |        6 |        0.445 |          -0.273 |    1.000 |
+| elliptic_time     | paft_bayes  | dta_em     |        15 |      -0.007 |         0.000 |    -0.021 |     0.002 |      4 |      7 |        4 |        0.779 |          -0.111 |    1.000 |
+| elliptic_time     | paft_bayes  | em_fixed   |        15 |      -0.001 |         0.000 |    -0.003 |     0.002 |      2 |      7 |        6 |        0.208 |          -0.500 |    0.899 |
+| elliptic_time     | paft_bayes  | paft_guard |        15 |      -0.005 |         0.000 |    -0.027 |     0.015 |      4 |      5 |        6 |        0.445 |          -0.273 |    1.000 |
+| elliptic_time     | paft_bayes  | paft_plug  |        15 |       0.001 |         0.000 |     0.000 |     0.001 |      2 |     13 |        0 |        0.180 |           1.000 |    0.899 |

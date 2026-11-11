@@ -1,0 +1,20 @@
+| dataset         |   guard_fire_rate_under_pure_label_shift |
+|:----------------|-----------------------------------------:|
+| Diabetes130US   |                                    0.000 |
+| online_shoppers |                                    0.000 |
+| porto_seguro    |                                    0.001 |
+| bank_marketing  |                                    0.001 |
+| KDD09_churn     |                                    0.002 |
+| default_credit  |                                    0.002 |
+| kick            |                                    0.003 |
+| KDD09_upselling |                                    0.005 |
+| Click_small     |                                    0.007 |
+| census_income   |                                    0.013 |
+| adult           |                                    0.018 |
+| Amazon_employee |                                    0.019 |
+| nomao           |                                    0.038 |
+| MiniBooNE       |                                    0.039 |
+| jm1             |                                    0.053 |
+| KDD09_appetency |                                    0.062 |
+| APSFailure      |                                    0.204 |
+| creditcard      |                                    1.000 |

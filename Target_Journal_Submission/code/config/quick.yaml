@@ -1,0 +1,18 @@
+# Pipeline smoke test (minutes). NOT the scientific experiment.
+seeds: [0]
+models: [lgbm, logreg]
+main_model: lgbm
+split: {n_folds: 10, train_folds: 5, val_folds: 2, test_folds: 3}
+controlled:
+  datasets: [adult, jm1, online_shoppers]
+  odds_multipliers: [0.25, 1.0, 4.0]
+  batch_sizes: [500, 2000]
+  reps: 5
+  extra_batch_sizes: [100]
+  metrics_extra: [f2, mcc]
+  noise_levels: [0.25]
+  val_fractions: [0.25]
+real:
+  suites: [bank_time, electricity_time]
+method: {prior_sd: 2.0, guard_alpha: 0.01, n_grid: 161, calibrator: isotonic}
+n_jobs: 4

@@ -1,0 +1,14 @@
+joblib==1.6.0
+lightgbm==4.7.0
+matplotlib==3.11.2
+numpy==2.5.3
+pandas==3.0.5
+pytest==9.2.0
+python-docx==1.2.0
+PyYAML==6.0.3
+scikit-learn==1.9.1
+scipy==1.18.1
+statsmodels==0.15.0
+tabulate==0.10.0
+torch==2.15.0+cpu
+xgboost==3.4.1

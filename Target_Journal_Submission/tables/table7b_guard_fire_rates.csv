@@ -1,0 +1,12 @@
+condition,guard_fire_rate
+ablation,0.0774339
+calib_platt,0.0750794
+main,0.0329189
+metric_f0.5,0.0743386
+metric_f2,0.073545
+metric_mcc,0.0747619
+noise_0.1,0.624868
+noise_0.25,0.703651
+noise_0.5,0.755397
+valfrac_0.1,0.0738095
+valfrac_0.25,0.0719577

@@ -1,0 +1,39 @@
+                                                          component       m           ms    peak_mb
+0   fit decision layer (once, incl. 50 bootstrap static thresholds)    9766  3696.233516  14.192033
+1                                static threshold (comparison only)     100     0.000625        NaN
+2                                         EM prior correction (SLD)     100     0.148894        NaN
+3                              DTA-EM (EM + sort + expected-F scan)     100     0.166023        NaN
+4                                                         PAFT-Plug     100     0.036274        NaN
+5                                                        PAFT-Bayes     100     0.429220        NaN
+6                                              PAFT guard (KS test)     100     0.065626        NaN
+7                                                all rules (decide)     100     1.148722        NaN
+8                                static threshold (comparison only)     500     0.003050        NaN
+9                                         EM prior correction (SLD)     500     0.186347        NaN
+10                             DTA-EM (EM + sort + expected-F scan)     500     0.184067        NaN
+11                                                        PAFT-Plug     500     0.042405        NaN
+12                                                       PAFT-Bayes     500     0.497617        NaN
+13                                             PAFT guard (KS test)     500     0.089127        NaN
+14                                               all rules (decide)     500     1.283092        NaN
+15                               static threshold (comparison only)    2000     0.000756        NaN
+16                                        EM prior correction (SLD)    2000     0.269776        NaN
+17                             DTA-EM (EM + sort + expected-F scan)    2000     0.281226        NaN
+18                                                        PAFT-Plug    2000     0.080762        NaN
+19                                                       PAFT-Bayes    2000     0.557639        NaN
+20                                             PAFT guard (KS test)    2000     0.194374        NaN
+21                                               all rules (decide)    2000     1.512725        NaN
+22                               static threshold (comparison only)   10000     0.001467        NaN
+23                                        EM prior correction (SLD)   10000     0.727428        NaN
+24                             DTA-EM (EM + sort + expected-F scan)   10000     0.886272        NaN
+25                                                        PAFT-Plug   10000     0.321632        NaN
+26                                                       PAFT-Bayes   10000     0.764727        NaN
+27                                             PAFT guard (KS test)   10000     0.567305        NaN
+28                                               all rules (decide)   10000     3.039742        NaN
+29                               static threshold (comparison only)  100000     0.009052        NaN
+30                                        EM prior correction (SLD)  100000    13.236667        NaN
+31                             DTA-EM (EM + sort + expected-F scan)  100000    10.182840        NaN
+32                                                        PAFT-Plug  100000     2.851758        NaN
+33                                                       PAFT-Bayes  100000     3.162464        NaN
+34                                             PAFT guard (KS test)  100000     4.332617        NaN
+35                                               all rules (decide)  100000    29.977630        NaN
+36                            retrain LightGBM on adult (reference)   24424  1511.209249        NaN
+37            stored state: thresholds T x grid G surface (float64)  329728          NaN   2.515625

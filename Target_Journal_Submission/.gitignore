@@ -1,0 +1,6 @@
+code/data/raw/
+scores/
+code/quick_run/
+__pycache__/
+*.pyc
+.pytest_cache/
